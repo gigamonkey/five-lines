@@ -177,7 +177,7 @@ class Keybindings {
 
   doActions() {
     while (this.actions.length > 0) {
-      this.actions.pop()();
+      this.actions.shift()();
     }
   }
 }
