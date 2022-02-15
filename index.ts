@@ -8,7 +8,7 @@ enum Tile {
   UNBREAKABLE,
   PLAYER,
   STONE,
-  BOX, 
+  BOX,
   KEY1, LOCK1,
   KEY2, LOCK2
 }
@@ -32,9 +32,11 @@ const tileColors = new Map<Tile, string>([
   [Tile.LOCK2, "#00ccff"],
 ]);
 
-
-enum Input {
-  UP, DOWN, LEFT, RIGHT
+const Input = {
+  UP: () => moveVertical(-1),
+  DOWN: () => moveVertical(1),
+  LEFT: () => moveHorizontal(-1),
+  RIGHT: () => moveHorizontal(1),
 }
 
 const keyMap: Map<string, Input> = new Map<string, Input>([
@@ -45,7 +47,7 @@ const keyMap: Map<string, Input> = new Map<string, Input>([
   ["ArrowLeft", Input.LEFT],
   ["a", Input.LEFT],
   ["ArrowRight", Input.RIGHT],
-  ["d", Input.RIGHT],    
+  ["d", Input.RIGHT],
 ]);
 
 
@@ -134,20 +136,7 @@ function update() {
 
 function processInputs() {
   while (inputs.length > 0) {
-    switch (inputs.pop()) {
-      case Input.LEFT:
-        moveHorizontal(-1);
-        break;
-      case Input.RIGHT:
-        moveHorizontal(1);
-        break;
-      case Input.UP:
-        moveVertical(-1);
-        break;
-      case Input.DOWN:
-        moveVertical(1);
-        break;
-    }
+    inputs.pop()();
   }
 }
 
