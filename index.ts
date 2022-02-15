@@ -1,7 +1,7 @@
 
 const TILE_SIZE = 30;
 const FPS = 30;
-const SLEEP = 1000 / FPS;
+const MILLIS_PER_FRAME = 1000 / FPS;
 
 enum Tile {
   AIR,
@@ -179,23 +179,19 @@ function drawPlayer(g: CanvasRenderingContext2D): void {
 }
 
 function gameLoop() {
-  let before = Date.now();
+  let start = Date.now();
   update();
   draw();
-  let after = Date.now();
-  let frameTime = after - before;
-  let sleep = SLEEP - frameTime;
-  setTimeout(() => gameLoop(), sleep);
+  setTimeout(gameLoop, Math.max(0, (start + MILLIS_PER_FRAME) - Date.now()));
 }
 
-window.onload = () => {
-  gameLoop();
-}
+window.onload = gameLoop;
 
 const LEFT_KEY = "ArrowLeft";
 const UP_KEY = "ArrowUp";
 const RIGHT_KEY = "ArrowRight";
 const DOWN_KEY = "ArrowDown";
+
 window.addEventListener("keydown", e => {
   if (e.key === LEFT_KEY || e.key === "a") inputs.push(Input.LEFT);
   else if (e.key === UP_KEY || e.key === "w") inputs.push(Input.UP);
