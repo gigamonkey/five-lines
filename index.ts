@@ -18,7 +18,7 @@ enum Tile {
   LOCK2,
 }
 
-const canBeOccupied = new Set<Tile>([Tile.AIR, Tile.FLUX, Tile.KEY1, Tile.KEY2]);
+const consumable = new Set<Tile>([Tile.AIR, Tile.FLUX, Tile.KEY1, Tile.KEY2]);
 
 const locksAndKeys: Map<Tile, Tile> = new Map<Tile, Tile>([
   [Tile.KEY1, Tile.LOCK1],
@@ -85,11 +85,15 @@ class Cell {
     this.clear();
   }
 
+  canBeConsumed() {
+    return consumable.has(this.tile());
+  }
+
   canFall() {
     return this.is(Tile.STONE) || this.is(Tile.BOX);
   }
 
-  canPush(dx: number): boolean {
+  canBePushed(dx: number): boolean {
     // FIXME I'm not sure what the check for the cell below not being empty is
     // about as it seems like it must always be true unless the block is
     // floating already.
@@ -97,7 +101,6 @@ class Cell {
     const below = this.below(); 
     return this.canFall() && after.isEmpty() && !below.isEmpty();
   }
-  
 }
 
 class Board {
@@ -120,9 +123,9 @@ class Board {
 
   move(dx: number, dy: number) {
     const goingTo = this.player.dx(dx).dy(dy);
-    if (canBeOccupied.has(goingTo.tile())) {
+    if (goingTo.canBeConsumed()) {
       this.movePlayerTo(goingTo);
-    } else if (dx !== 0 && goingTo.canPush(dx)) {
+    } else if (dx !== 0 && goingTo.canBePushed(dx)) {
       goingTo.moveTile(goingTo.dx(dx));
       this.movePlayerTo(goingTo);
     }
@@ -144,7 +147,7 @@ class Board {
     for (let c of this.cells(c => c.canFall())) {
       if (c.y < this.tiles.length - 1) {
         let below = c.below();
-        if (below.is(Tile.AIR)) {
+        if (below.isEmpty()) {
           c.moveTile(below);
         }
       }
