@@ -223,11 +223,13 @@ function step() {
   board.draw(g);
 }
 
-function gameLoop() {
-  let start = Date.now();
-  step();
-  setTimeout(gameLoop, Math.max(0, (start + MILLIS_PER_FRAME) - Date.now()));
+function loop(step: () => void) {
+  return () => {
+    let start = Date.now();
+    step();
+    setTimeout(loop(step), Math.max(0, (start + MILLIS_PER_FRAME) - Date.now()));
+  }
 }
 
-window.onload = gameLoop;
+window.onload = loop(step);
 window.onkeydown = e => keybindings.handle(e);
