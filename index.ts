@@ -129,7 +129,7 @@ function moveVertical(dy: number) {
 
 function update() {
   processInputs();
-  dropTiles();
+  dropTilesOneCell();
 }
 
 function processInputs() {
@@ -151,17 +151,20 @@ function processInputs() {
   }
 }
 
-// Drop tiles one cell per frame.
-function dropTiles() {
+function dropTilesOneCell() {
   for (let y = map.length - 1; y >= 0; y--) {
     for (let x = 0; x < map[y].length; x++) {
       let tile = map[y][x];
-      if ((tile === Tile.STONE || tile === Tile.BOX) && map[y + 1][x] === Tile.AIR) {
+      if (canFall(tile) && map[y + 1][x] === Tile.AIR) {
         map[y + 1][x] = tile;
         map[y][x] = Tile.AIR;
       }
     }
   }
+}
+
+function canFall(tile: Tile) {
+  return tile === Tile.STONE || tile === Tile.BOX;
 }
 
 function draw() {
