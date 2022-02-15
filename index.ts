@@ -34,6 +34,8 @@ const tileColors = new Map<Tile, string>([
   [Tile.LOCK2, "#00ccff"],
 ]);
 
+type Thunk = () => void;
+
 const Input = {
   UP: () => move(0, -1),
   DOWN: () => move(0, 1),
@@ -52,27 +54,25 @@ const keyMap: Map<string, Input> = new Map<string, Input>([
   ["d", Input.RIGHT],
 ]);
 
-type Thunk = () => void;
-
 let inputs: Thunk[] = [];
 
 class Cell {
   x: number;
   y: number;
-  map: Tile[][];
+  tiles: Tile[][];
 
   constructor(x: number, y: number, map: Tile[][]) {
     this.x = x;
     this.y = y;
-    this.map = map;
+    this.tiles = map;
   }
 
   dx(d: number): Cell {
-    return new Cell(this.x + d, this.y, this.map);
+    return new Cell(this.x + d, this.y, this.tiles);
   }
 
   dy(d: number): Cell {
-    return new Cell(this.x, this.y + d, this.map);
+    return new Cell(this.x, this.y + d, this.tiles);
   }
 
   below() { 
@@ -80,7 +80,7 @@ class Cell {
   }
 
   tile() {
-    return map[this.y][this.x];
+    return this.tiles[this.y][this.x];
   }
 
   is(tile: Tile) {
@@ -88,7 +88,7 @@ class Cell {
   }
 
   setTile(tile: Tile) {
-    this.map[this.y][this.x] = tile;
+    this.tiles[this.y][this.x] = tile;
   }
 
   clear() {
@@ -96,24 +96,44 @@ class Cell {
   }
 }
 
+class Board {
+  tiles: Tile[][];
 
-let map: Tile[][] = [
+  constructor(tiles: Tile[][]) {
+    this.tiles = tiles;
+  }
+
+  cell(x: number, y: number) {
+    return new Cell(x, y, this.tiles);
+  }
+
+  *cells(p: (Cell) => boolean) {
+    for (let y = 0; y < this.tiles.length; y++) {
+      for (let x = 0; x < this.tiles[y].length; x++) {
+        let cell = this.cell(x, y);
+        if (p(cell)) {
+          yield cell;
+        }
+      }
+    }
+  }
+
+}
+
+let board: Board = new Board([
   [2, 2, 2, 2, 2, 2, 2, 2],
   [2, 3, 0, 1, 1, 2, 0, 2],
   [2, 4, 2, 5, 1, 2, 0, 2],
   [2, 6, 4, 1, 1, 2, 0, 2],
   [2, 4, 1, 1, 1, 7, 0, 2],
   [2, 2, 2, 2, 2, 2, 2, 2],
-];
+]);
 
-let player = new Cell(1, 1, map);
+let player = board.cell(1, 1);
 
 function remove(tile: Tile) {
-  for (let y = 0; y < map.length; y++) {
-    for (let x = 0; x < map[y].length; x++) {
-      let c = new Cell(x, y, map);
-      if (c.is(tile)) c.clear();;
-    }
+  for (let c of board.cells(c => c.is(tile))) {
+    c.clear();
   }
 }
 
@@ -164,11 +184,10 @@ function processInputs() {
 }
 
 function dropTilesOneCell() {
-  for (let y = map.length - 2; y >= 0; y--) {
-    for (let x = 0; x < map[y].length; x++) {
-      let c = new Cell(x, y, map);
+  for (let c of board.cells(c => canFall(c.tile()))) {
+    if (c.y < board.tiles.length - 1) {
       let below = c.below();
-      if (canFall(c.tile()) && below.is(Tile.AIR)) {
+      if (below.is(Tile.AIR)) {
         moveTile(c, below);
       }
     }
@@ -187,14 +206,9 @@ function draw() {
 }
 
 function drawMap(g: CanvasRenderingContext2D) {
-  for (let y = 0; y < map.length; y++) {
-    for (let x = 0; x < map[y].length; x++) {
-      let tile = new Cell(x, y, map).tile();
-      if (tileColors.has(tile)) {
-        g.fillStyle = tileColors.get(tile);
-        g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-      }
-    }
+  for (let c of board.cells(c => tileColors.has(c.tile()))) {
+    g.fillStyle = tileColors.get(c.tile());
+    g.fillRect(c.x * TILE_SIZE, c.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
   }
 }
 
