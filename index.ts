@@ -7,18 +7,56 @@ const MILLIS_PER_FRAME = 1000 / FPS;
 
 enum Kind { CONSUMABLE, PUSHABLE, IMMOVABLE, PLAYER, EMPTY };
 
+/*
+ * The distinct tiles that can exist. There should only be one instance of each type.
+ */
 class Tile {
   color: string;
   kind: Kind;
   unlocks: Tile;
+  sprite: Sprite;
 
   constructor(color: string, kind: Kind) {
     this.color = color;
     this.kind = kind;
     this.unlocks = null;
+    this.sprite = new SquareSprite();
+  }
+ 
+  draw(g: CanvasRenderingContext2D, x: number, y: number) {
+    this.sprite.draw(g, this.color, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+  }
+
+  makeKeyFor(unlocks: Tile) {
+    this.unlocks = unlocks;
+    this.sprite = new CircleSprite();
   }
 }
 
+interface Sprite {
+  draw(g: CanvasRenderingContext2D, c: string, x: number, y: number, w: number, h: number): void;
+}
+
+class SquareSprite implements Sprite {
+  draw(g: CanvasRenderingContext2D, color: string, x: number, y: number, w: number, h: number) {
+    g.fillStyle = color;
+    g.fillRect(x, y, w, h);
+  }
+}
+
+class CircleSprite implements Sprite {
+  draw(g: CanvasRenderingContext2D, color: string, x: number, y: number, w: number, h: number) {
+    g.beginPath();
+    g.fillStyle = color;
+    g.arc(x + w/2, y + h/2, w/2, 0, 2 * Math.PI, true);
+    g.fill();
+  }
+}
+
+/*
+ * The cells of the board. Each has an x,y coordinate and a reference back to
+ * the board in order to get at the underlying tiles.
+ */
 class Cell {
   x: number;
   y: number;
@@ -31,8 +69,7 @@ class Cell {
   }
 
   draw(g: CanvasRenderingContext2D) {
-    g.fillStyle = this.tile().color;
-    g.fillRect(this.x * TILE_SIZE, this.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    this.tile().draw(g, this.x, this.y);
   }
 
   dx(d: number): Cell {
@@ -90,6 +127,9 @@ class Cell {
   }
 }
 
+/*
+ * The board itself.
+ */  
 class Board {
   tiles: Tile[][];
   player: Cell;
@@ -99,7 +139,7 @@ class Board {
     this.tiles = numbers.map(row => row.map(n => TILE_NUMBERS[n]));
     let players = this.cells(c => c.is(playerTile));
     this.player = players.next().value;
-    console.assert(players.next().done, "Only one player");
+    console.assert(players.next().done, "Should only be one player");
     this.emptyTile = emptyTile;
   }
 
@@ -209,8 +249,8 @@ const TILES = {
   LOCK2: new Tile("#00ccff", Kind.IMMOVABLE),
 };
 
-TILES.KEY1.unlocks = TILES.LOCK1;
-TILES.KEY2.unlocks = TILES.LOCK2;
+TILES.KEY1.makeKeyFor(TILES.LOCK1);
+TILES.KEY2.makeKeyFor(TILES.LOCK2);
 
 const TILE_NUMBERS = [
   TILES.AIR, 
@@ -256,7 +296,7 @@ function loop(step: () => void) {
     let start = Date.now();
     step();
     setTimeout(loop(step), Math.max(0, (start + MILLIS_PER_FRAME) - Date.now()));
-  }
+  };
 }
 
 window.onload = loop(step);
