@@ -136,9 +136,7 @@ function maybeUnlock(current: Tile) {
 
 function moveHorizontal(dx: number) {
   const goingTo = player.dx(dx);
-  const newTile = goingTo.tile();
-
-  if (canBeOccupied.has(newTile)) {
+  if (canBeOccupied.has(goingTo.tile())) {
     movePlayerTo(goingTo);
   } else if (canPush(goingTo, dx)) {
     moveTile(goingTo, goingTo.dx(dx));
@@ -146,10 +144,8 @@ function moveHorizontal(dx: number) {
   }
 }
 
-
 function canPush(goingTo: Cell, dx: number): boolean {
-  const newTile = goingTo.tile();
-  const isPushable = newTile === Tile.STONE || newTile === Tile.BOX;
+  const isPushable = goingTo.is(Tile.STONE) || goingTo.is(Tile.BOX);
   const emptyAfter = goingTo.dx(dx).is(Tile.AIR);
   const emptyBelow = goingTo.below().is(Tile.AIR); // FIXME seems like this can't happen unless the block is floating already.
 
