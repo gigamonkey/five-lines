@@ -2,9 +2,6 @@ const TILE_SIZE = 30;
 const FPS = 30;
 const MILLIS_PER_FRAME = 1000 / FPS;
 
-
-
-
 enum Tile {
   AIR,
   FLUX,
