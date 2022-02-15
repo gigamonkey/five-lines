@@ -215,21 +215,18 @@ keybindings.bindKeys(["ArrowDown", "s"], () => board.move(0, 1));
 keybindings.bindKeys(["ArrowLeft", "a"], () => board.move(-1, 0));
 keybindings.bindKeys(["ArrowRight", "d"], () => board.move(1, 0));
 
-function gameLoop() {
-  let start = Date.now();
-  update();
-  draw();
-  setTimeout(gameLoop, Math.max(0, (start + MILLIS_PER_FRAME) - Date.now()));
-}
 
-function update() {
+function step() {
   keybindings.doActions();
   board.dropTilesOneCell();
-}
-
-function draw() {
   g.clearRect(0, 0, canvas.width, canvas.height);
   board.draw(g);
+}
+
+function gameLoop() {
+  let start = Date.now();
+  step();
+  setTimeout(gameLoop, Math.max(0, (start + MILLIS_PER_FRAME) - Date.now()));
 }
 
 window.onload = gameLoop;
