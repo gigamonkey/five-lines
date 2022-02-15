@@ -14,7 +14,7 @@ enum Tile {
   KEY2, LOCK2
 }
 
-const empty = new Set<Tile>([Tile.AIR, Tile.FLUX, Tile.KEY1, Tile.KEY2]);
+const available = new Set<Tile>([Tile.AIR, Tile.FLUX, Tile.KEY1, Tile.KEY2]);
 
 const locksAndKeys: Map<Tile, Tile> = new Map<Tile, Tile>([
   [Tile.KEY1, Tile.LOCK1],
@@ -97,7 +97,7 @@ function moveHorizontal(dx: number) {
 }
 
 function canOccupy(tile: Tile): boolean {
-  return empty.has(tile);
+  return available.has(tile);
 }
 
 function canPush(goingTo: Point, dx: number): boolean {
@@ -168,12 +168,11 @@ function draw() {
 function drawMap(g: CanvasRenderingContext2D) {
   for (let y = 0; y < map.length; y++) {
     for (let x = 0; x < map[y].length; x++) {
-      if (tileColors.has(map[y][x])) {
-        g.fillStyle = tileColors.get(map[y][x]);
-      }
-
-      if (map[y][x] !== Tile.AIR && map[y][x] !== Tile.PLAYER)
+      let tile = map[y][x];
+      if (tileColors.has(tile)) {
+        g.fillStyle = tileColors.get(tile);
         g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+      }
     }
   }
 }
