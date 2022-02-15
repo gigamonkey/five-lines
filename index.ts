@@ -9,8 +9,10 @@ enum Tile {
   PLAYER,
   STONE,
   BOX,
-  KEY1, LOCK1,
-  KEY2, LOCK2
+  KEY1,
+  LOCK1,
+  KEY2,
+  LOCK2,
 }
 
 const canBeOccupied = new Set<Tile>([Tile.AIR, Tile.FLUX, Tile.KEY1, Tile.KEY2]);
@@ -96,7 +98,7 @@ function remove(tile: Tile) {
 }
 
 function movePlayerTo(p: Point) {
-  removeLocks(map[p.y][p.x]);
+  maybeUnlock(map[p.y][p.x]);
   moveTile(player, p);
   player = p;
 }
@@ -106,7 +108,7 @@ function moveTile(from: Point, to: Point) {
   map[from.y][from.x] = Tile.AIR;
 }
 
-function removeLocks(current: Tile) {
+function maybeUnlock(current: Tile) {
   if (locksAndKeys.has(current)) {
     remove(locksAndKeys.get(current));
   }
