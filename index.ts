@@ -85,8 +85,8 @@ function canOccupy(newTile: Tile): boolean {
 function canPush(newTile: Tile, dx: number) {
   const isPushable = newTile === Tile.STONE || newTile === Tile.BOX;
   const emptyAfter = map[player.y][player.x + dx + dx] === Tile.AIR;
-  const emptyBelow = map[player.y + 1][player.x + dx] !== Tile.AIR; // FIXME seems like this can't happen.
-  return isPushable && emptyAfter && emptyBelow;
+  const emptyBelow = map[player.y + 1][player.x + dx] === Tile.AIR; // FIXME seems like this can't happen.
+  return isPushable && emptyAfter && !emptyBelow;
 }
 
 function moveVertical(dy: number) {
