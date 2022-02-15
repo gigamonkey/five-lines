@@ -50,6 +50,9 @@ const keyMap: Map<string, Input> = new Map<string, Input>([
   ["d", Input.RIGHT],
 ]);
 
+type Thunk = () => void;
+
+let inputs: Thunk[] = [];
 
 class Point {
   x: number;
@@ -72,7 +75,7 @@ let map: Tile[][] = [
   [2, 2, 2, 2, 2, 2, 2, 2],
 ];
 
-let inputs: Input[] = [];
+
 
 function remove(tile: Tile) {
   for (let y = 0; y < map.length; y++) {
