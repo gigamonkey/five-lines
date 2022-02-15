@@ -37,10 +37,10 @@ const tileColors = new Map<Tile, string>([
 type Thunk = () => void;
 
 const Input = {
-  UP: () => move(0, -1),
-  DOWN: () => move(0, 1),
-  LEFT: () => move(-1, 0),
-  RIGHT: () => move(1, 0),
+  UP: () => board.move(0, -1),
+  DOWN: () => board.move(0, 1),
+  LEFT: () => board.move(-1, 0),
+  RIGHT: () => board.move(1, 0),
 }
 
 const keyMap: Map<string, Input> = new Map<string, Input>([
@@ -108,6 +108,22 @@ class Board {
     this.player = this.cells(c => c.is(Tile.PLAYER)).next().value;
   }
 
+  move(dx: number, dy: number) {
+    const goingTo = this.player.dx(dx).dy(dy);
+    if (canBeOccupied.has(goingTo.tile())) {
+      this.movePlayerTo(goingTo);
+    } else if (dx !== 0 && canPush(goingTo, dx)) {
+      moveTile(goingTo, goingTo.dx(dx));
+      this.movePlayerTo(goingTo);
+    }
+  }
+
+  movePlayerTo(c: Cell) {
+    maybeUnlock(c.tile());
+    moveTile(this.player, c);
+    this.player = c;
+  }
+
   cell(x: number, y: number): Cell {
     return new Cell(x, y, this.tiles);
   }
@@ -141,12 +157,6 @@ function remove(tile: Tile) {
   }
 }
 
-function movePlayerTo(c: Cell) {
-  maybeUnlock(c.tile());
-  moveTile(board.player, c);
-  board.player = c;
-}
-
 function moveTile(from: Cell, to: Cell) {
   to.setTile(from.tile())
   from.clear();
@@ -155,16 +165,6 @@ function moveTile(from: Cell, to: Cell) {
 function maybeUnlock(current: Tile) {
   if (locksAndKeys.has(current)) {
     remove(locksAndKeys.get(current));
-  }
-}
-
-function move(dx: number, dy: number) {
-  const goingTo = board.player.dx(dx).dy(dy);
-  if (canBeOccupied.has(goingTo.tile())) {
-    movePlayerTo(goingTo);
-  } else if (dx !== 0 && canPush(goingTo, dx)) {
-    moveTile(goingTo, goingTo.dx(dx));
-    movePlayerTo(goingTo);
   }
 }
 
