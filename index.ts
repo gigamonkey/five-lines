@@ -57,8 +57,8 @@ class Cell {
     return new Cell(this.x, this.y + d, this.tiles);
   }
 
-  below() { 
-    return this.dy(1); 
+  below() {
+    return this.dy(1);
   }
 
   tile() {
@@ -156,6 +156,32 @@ class Board {
   }
 }
 
+class Keybindings {
+  bindings: Map<string, Action>;
+  actions: Action[];
+
+  constructor() {
+    this.bindings = new Map<string, Action>();
+    this.actions = [];
+  }
+
+  bindKeys(keys: string[], action: Action) {
+    keys.forEach(k => this.bindings.set(k, action));
+  }
+
+  handle(e: KeyboardEvent) {
+    if (this.bindings.has(e.key)) {
+      this.actions.push(this.bindings.get(e.key));
+    }
+  }
+
+  doActions() {
+    while (this.actions.length > 0) {
+      this.actions.pop()();
+    }
+  }
+}
+
 function canFall(tile: Tile) {
   return tile === Tile.STONE || tile === Tile.BOX;
 }
@@ -180,18 +206,12 @@ let board: Board = new Board([
   [2, 2, 2, 2, 2, 2, 2, 2],
 ]);
 
-const keyMap: Map<string, Action> = new Map<string, Action>();
+const keybindings = new Keybindings();
 
-function keybinding(keys: string[], action: Action) {
-  keys.forEach(k => keyMap.set(k, action));
-}
-
-keybinding(["ArrowUp", "w"], () => board.move(0, -1));
-keybinding(["ArrowDown", "s"], () => board.move(0, 1));
-keybinding(["ArrowLeft", "a"], () => board.move(-1, 0));
-keybinding(["ArrowRight", "d"], () => board.move(1, 0));
-
-let actions: Action[] = [];
+keybindings.bindKeys(["ArrowUp", "w"], () => board.move(0, -1));
+keybindings.bindKeys(["ArrowDown", "s"], () => board.move(0, 1));
+keybindings.bindKeys(["ArrowLeft", "a"], () => board.move(-1, 0));
+keybindings.bindKeys(["ArrowRight", "d"], () => board.move(1, 0));
 
 function gameLoop() {
   let start = Date.now();
@@ -201,9 +221,7 @@ function gameLoop() {
 }
 
 function update() {
-  while (actions.length > 0) {
-    actions.pop()();
-  }
+  keybindings.doActions();
   board.dropTilesOneCell();
 }
 
@@ -214,12 +232,5 @@ function draw() {
   board.draw(g);
 }
 
-function keyHandler(e: KeyboardEvent) {
-  if (keyMap.has(e.key)) {
-    actions.push(keyMap.get(e.key));
-  }
-}
-
 window.onload = gameLoop;
-window.onkeydown = keyHandler;
-
+window.onkeydown = e => keybindings.handle(e);
