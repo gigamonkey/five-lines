@@ -75,6 +75,10 @@ class Cell {
     return new Cell(this.x, this.y + d, this.map);
   }
 
+  below() { 
+    return this.dy(1); 
+  }
+
   tile() {
     return map[this.y][this.x];
   }
@@ -147,7 +151,7 @@ function canPush(goingTo: Cell, dx: number): boolean {
   const newTile = goingTo.tile();
   const isPushable = newTile === Tile.STONE || newTile === Tile.BOX;
   const emptyAfter = goingTo.dx(dx).is(Tile.AIR);
-  const emptyBelow = goingTo.dy(1).is(Tile.AIR); // FIXME seems like this can't happen unless the block is floating already.
+  const emptyBelow = goingTo.below().is(Tile.AIR); // FIXME seems like this can't happen unless the block is floating already.
 
   return isPushable && emptyAfter && !emptyBelow;
 }
@@ -173,10 +177,10 @@ function processInputs() {
 function dropTilesOneCell() {
   for (let y = map.length - 2; y >= 0; y--) {
     for (let x = 0; x < map[y].length; x++) {
-      let p = new Cell(x, y, map);
-      let below = p.dy(1);
-      if (canFall(p.tile()) && below.is(Tile.AIR)) {
-        moveTile(p, p.dy(1));
+      let c = new Cell(x, y, map);
+      let below = c.below();
+      if (canFall(c.tile()) && below.is(Tile.AIR)) {
+        moveTile(c, below);
       }
     }
   }
