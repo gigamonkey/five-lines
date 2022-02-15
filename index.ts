@@ -56,25 +56,42 @@ type Thunk = () => void;
 
 let inputs: Thunk[] = [];
 
-class Point {
+class Cell {
   x: number;
   y: number;
+  map: Tile[][];
 
-  constructor(x: number, y: number) {
+  constructor(x: number, y: number, map: Tile[][]) {
     this.x = x;
     this.y = y;
+    this.map = map;
   }
 
-  dx(d: number): Point {
-    return new Point(this.x + d, this.y);
+  dx(d: number): Cell {
+    return new Cell(this.x + d, this.y, this.map);
   }
 
-  dy(d: number): Point {
-    return new Point(this.x, this.y + d);
+  dy(d: number): Cell {
+    return new Cell(this.x, this.y + d, this.map);
+  }
+
+  tile() {
+    return map[this.y][this.x];
+  }
+
+  is(tile: Tile) {
+    return this.tile() === tile;
+  }
+
+  setTile(tile: Tile) {
+    this.map[this.y][this.x] = tile;
+  }
+
+  clear() {
+    this.setTile(Tile.AIR);
   }
 }
 
-let player = new Point(1, 1);
 
 let map: Tile[][] = [
   [2, 2, 2, 2, 2, 2, 2, 2],
@@ -85,27 +102,26 @@ let map: Tile[][] = [
   [2, 2, 2, 2, 2, 2, 2, 2],
 ];
 
-
+let player = new Cell(1, 1, map);
 
 function remove(tile: Tile) {
   for (let y = 0; y < map.length; y++) {
     for (let x = 0; x < map[y].length; x++) {
-      if (map[y][x] === tile) {
-        map[y][x] = Tile.AIR;
-      }
+      let c = new Cell(x, y, map);
+      if (c.is(tile)) c.clear();;
     }
   }
 }
 
-function movePlayerTo(p: Point) {
-  maybeUnlock(map[p.y][p.x]);
-  moveTile(player, p);
-  player = p;
+function movePlayerTo(c: Cell) {
+  maybeUnlock(c.tile());
+  moveTile(player, c);
+  player = c;
 }
 
-function moveTile(from: Point, to: Point) {
-  map[to.y][to.x] = map[from.y][from.x];
-  map[from.y][from.x] = Tile.AIR;
+function moveTile(from: Cell, to: Cell) {
+  to.setTile(from.tile())
+  from.clear();
 }
 
 function maybeUnlock(current: Tile) {
@@ -116,7 +132,7 @@ function maybeUnlock(current: Tile) {
 
 function moveHorizontal(dx: number) {
   const goingTo = player.dx(dx);
-  const newTile = map[goingTo.y][goingTo.x];
+  const newTile = goingTo.tile();
 
   if (canBeOccupied.has(newTile)) {
     movePlayerTo(goingTo);
@@ -127,18 +143,18 @@ function moveHorizontal(dx: number) {
 }
 
 
-function canPush(goingTo: Point, dx: number): boolean {
-  const newTile = map[goingTo.y][goingTo.x];
+function canPush(goingTo: Cell, dx: number): boolean {
+  const newTile = goingTo.tile();
   const isPushable = newTile === Tile.STONE || newTile === Tile.BOX;
-  const emptyAfter = map[goingTo.y][goingTo.x + dx] === Tile.AIR;
-  const emptyBelow = map[goingTo.y + 1][goingTo.x] === Tile.AIR; // FIXME seems like this can't happen unless the block is floating already.
+  const emptyAfter = goingTo.dx(dx).is(Tile.AIR);
+  const emptyBelow = goingTo.dy(1).is(Tile.AIR); // FIXME seems like this can't happen unless the block is floating already.
 
   return isPushable && emptyAfter && !emptyBelow;
 }
 
 function moveVertical(dy: number) {
   const goingTo = player.dy(dy);;
-  if (canBeOccupied.has(map[goingTo.y][goingTo.x])) {
+  if (canBeOccupied.has(goingTo.tile())) {
     movePlayerTo(goingTo);
   }
 }
@@ -157,9 +173,9 @@ function processInputs() {
 function dropTilesOneCell() {
   for (let y = map.length - 2; y >= 0; y--) {
     for (let x = 0; x < map[y].length; x++) {
-      let tile = map[y][x];
-      if (canFall(tile) && map[y + 1][x] === Tile.AIR) {
-        let p = new Point(x, y);
+      let p = new Cell(x, y, map);
+      let below = p.dy(1);
+      if (canFall(p.tile()) && below.is(Tile.AIR)) {
         moveTile(p, p.dy(1));
       }
     }
@@ -180,7 +196,7 @@ function draw() {
 function drawMap(g: CanvasRenderingContext2D) {
   for (let y = 0; y < map.length; y++) {
     for (let x = 0; x < map[y].length; x++) {
-      let tile = map[y][x];
+      let tile = new Cell(x, y, map).tile();
       if (tileColors.has(tile)) {
         g.fillStyle = tileColors.get(tile);
         g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
