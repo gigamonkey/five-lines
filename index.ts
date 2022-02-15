@@ -16,9 +16,21 @@ enum Tile {
 
 const empty = new Set<Tile>([Tile.AIR, Tile.FLUX, Tile.KEY1, Tile.KEY2]);
 
-const locksAndKeys: any = {};
-locksAndKeys[Tile.KEY1] = Tile.LOCK1;
-locksAndKeys[Tile.KEY2] = Tile.LOCK2;
+const locksAndKeys: Map<Tile, Tile> = new Map<Tile, Tile>();
+locksAndKeys.set(Tile.KEY1, Tile.LOCK1);
+locksAndKeys.set(Tile.KEY2, Tile.LOCK2);
+
+const tileColors = new Map<Tile, string>();
+tileColors.set(Tile.FLUX, "#ccffcc");
+tileColors.set(Tile.UNBREAKABLE, "#999999");
+tileColors.set(Tile.STONE, "#0000cc");
+tileColors.set(Tile.FALLING_STONE, "#0000cc");
+tileColors.set(Tile.BOX, "#8b4513");
+tileColors.set(Tile.FALLING_BOX, "#8b4513");
+tileColors.set(Tile.KEY1, "#ffcc00");
+tileColors.set(Tile.LOCK1, "#ffcc00");
+tileColors.set(Tile.KEY2, "#00ccff");
+tileColors.set(Tile.LOCK2, "#00ccff");
 
 enum Input {
   UP, DOWN, LEFT, RIGHT
@@ -65,8 +77,8 @@ function moveToTile(p: Point) {
 }
 
 function removeLocks(current: Tile) {
-  if (current in locksAndKeys) {
-    remove(locksAndKeys[current]);
+  if (locksAndKeys.has(current)) {
+    remove(locksAndKeys.get(current));
   }
 }
 
@@ -141,9 +153,7 @@ function dropTiles() {
 function draw() {
   let canvas = document.getElementById("GameCanvas") as HTMLCanvasElement;
   let g = canvas.getContext("2d");
-
   g.clearRect(0, 0, canvas.width, canvas.height);
-
   drawMap(g);
   drawPlayer(g);
 }
@@ -151,18 +161,9 @@ function draw() {
 function drawMap(g: CanvasRenderingContext2D) {
   for (let y = 0; y < map.length; y++) {
     for (let x = 0; x < map[y].length; x++) {
-      if (map[y][x] === Tile.FLUX)
-        g.fillStyle = "#ccffcc";
-      else if (map[y][x] === Tile.UNBREAKABLE)
-        g.fillStyle = "#999999";
-      else if (map[y][x] === Tile.STONE || map[y][x] === Tile.FALLING_STONE)
-        g.fillStyle = "#0000cc";
-      else if (map[y][x] === Tile.BOX || map[y][x] === Tile.FALLING_BOX)
-        g.fillStyle = "#8b4513";
-      else if (map[y][x] === Tile.KEY1 || map[y][x] === Tile.LOCK1)
-        g.fillStyle = "#ffcc00";
-      else if (map[y][x] === Tile.KEY2 || map[y][x] === Tile.LOCK2)
-        g.fillStyle = "#00ccff";
+      if (tileColors.has(map[y][x])) {
+        g.fillStyle = tileColors.get(map[y][x]);
+      }
 
       if (map[y][x] !== Tile.AIR && map[y][x] !== Tile.PLAYER)
         g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
