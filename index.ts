@@ -14,6 +14,10 @@ enum Tile {
   KEY2, LOCK2
 }
 
+const locksAndKeys: any = {};
+locksAndKeys[Tile.KEY1] = Tile.LOCK1;
+locksAndKeys[Tile.KEY2] = Tile.LOCK2;
+
 enum Input {
   UP, DOWN, LEFT, RIGHT
 }
@@ -59,10 +63,8 @@ function moveToTile(p: Point) {
 }
 
 function removeLocks(current: Tile) {
-  if (current === Tile.KEY1) {
-    remove(Tile.LOCK1);
-  } else if (current === Tile.KEY2) {
-    remove(Tile.LOCK2);
+  if (current in locksAndKeys) {
+    remove(locksAndKeys[current]);
   }
 }
 
