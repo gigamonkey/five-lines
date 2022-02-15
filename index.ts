@@ -93,12 +93,7 @@ function canPush(newTile: Tile, dx: number) {
 
 function moveVertical(dy: number) {
   const goingTo = new Point(player.x, player.y + dy);
-  const newTile = map[goingTo.y][goingTo.x];
-  if (newTile === Tile.FLUX || newTile === Tile.AIR) {
-    moveToTile(goingTo);
-  } else if (newTile === Tile.KEY1) {
-    moveToTile(goingTo);
-  } else if (newTile === Tile.KEY2) {
+  if (canOccupy(map[goingTo.y][goingTo.x])) {
     moveToTile(goingTo);
   }
 }
