@@ -69,22 +69,20 @@ function removeLocks(current: Tile) {
 function moveHorizontal(dx: number) {
   const goingTo = new Point(player.x + dx, player.y);
   const newTile = map[goingTo.y][goingTo.x];
-  if (newTile === Tile.FLUX || newTile === Tile.AIR) {
+  if (canOccupy(newTile) {
     moveToTile(goingTo);
 
   } else if ((newTile === Tile.STONE || newTile === Tile.BOX)
     && map[player.y][player.x + dx + dx] === Tile.AIR
-    && map[player.y + 1][player.x + dx] !== Tile.AIR) {
+    && map[player.y + 1][player.x + dx] !== Tile.AIR)
+  {
     map[player.y][player.x + dx + dx] = newTile;
-
-    moveToTile(goingTo);
-
-  } else if (newTile === Tile.KEY1) {
-    moveToTile(goingTo);
-
-  } else if (newTile === Tile.KEY2) {
     moveToTile(goingTo);
   }
+}
+
+function canOccupy(newTile: Tile): boolean {
+  return newTile === Tile.FLUX || newTile === Tile.AIR || newTile === Tile.KEY1 || newTile === Tile.KEY2;
 }
 
 function moveVertical(dy: number) {
