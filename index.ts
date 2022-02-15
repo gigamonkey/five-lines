@@ -32,10 +32,10 @@ let map: Tile[][] = [
 let inputs: Input[] = [];
 
 function remove(tile: Tile) {
-  for (let y = 0; y < map.length; y++) {
-    for (let x = 0; x < map[y].length; x++) {
-      if (map[y][x] === tile) {
-        map[y][x] = Tile.AIR;
+  for (let row = 0; row < map.length; row++) {
+    for (let col = 0; col < map[row].length; col++) {
+      if (map[row][col] === tile) {
+        map[row][col] = Tile.AIR;
       }
     }
   }
@@ -49,32 +49,35 @@ function moveToTile(newx: number, newy: number) {
 }
 
 function moveHorizontal(dx: number) {
-  if (map[playery][playerx + dx] === Tile.FLUX
-    || map[playery][playerx + dx] === Tile.AIR) {
+  const goingTo = map[playery][playerx + dx];
+  if (goingTo === Tile.FLUX || goingTo === Tile.AIR) {
     moveToTile(playerx + dx, playery);
-  } else if ((map[playery][playerx + dx] === Tile.STONE
-    || map[playery][playerx + dx] === Tile.BOX)
+
+  } else if ((goingTo === Tile.STONE || goingTo === Tile.BOX)
     && map[playery][playerx + dx + dx] === Tile.AIR
     && map[playery + 1][playerx + dx] !== Tile.AIR) {
-    map[playery][playerx + dx + dx] = map[playery][playerx + dx];
+    map[playery][playerx + dx + dx] = goingTo;
+
     moveToTile(playerx + dx, playery);
-  } else if (map[playery][playerx + dx] === Tile.KEY1) {
+
+  } else if (goingTo === Tile.KEY1) {
     remove(Tile.LOCK1);
     moveToTile(playerx + dx, playery);
-  } else if (map[playery][playerx + dx] === Tile.KEY2) {
+
+  } else if (goingTo === Tile.KEY2) {
     remove(Tile.LOCK2);
     moveToTile(playerx + dx, playery);
   }
 }
 
 function moveVertical(dy: number) {
-  if (map[playery + dy][playerx] === Tile.FLUX
-    || map[playery + dy][playerx] === Tile.AIR) {
+  const goingTo = map[playery + dy][playerx];
+  if (goingTo === Tile.FLUX || goingTo === Tile.AIR) {
     moveToTile(playerx, playery + dy);
-  } else if (map[playery + dy][playerx] === Tile.KEY1) {
+  } else if (goingTo === Tile.KEY1) {
     remove(Tile.LOCK1);
     moveToTile(playerx, playery + dy);
-  } else if (map[playery + dy][playerx] === Tile.KEY2) {
+  } else if (goingTo === Tile.KEY2) {
     remove(Tile.LOCK2);
     moveToTile(playerx, playery + dy);
   }
