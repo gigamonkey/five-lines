@@ -156,11 +156,8 @@ function dropTiles() {
   for (let y = map.length - 1; y >= 0; y--) {
     for (let x = 0; x < map[y].length; x++) {
       let tile = map[y][x];
-      if (tile === Tile.STONE && map[y + 1][x] === Tile.AIR) {
-        map[y + 1][x] = Tile.STONE;
-        map[y][x] = Tile.AIR;
-      } else if (tile === Tile.BOX && map[y + 1][x] === Tile.AIR) {
-        map[y + 1][x] = Tile.BOX;
+      if ((tile === Tile.STONE || tile === Tile.BOX) && map[y + 1][x] === Tile.AIR) {
+        map[y + 1][x] = tile;
         map[y][x] = Tile.AIR;
       }
     }
