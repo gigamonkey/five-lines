@@ -96,7 +96,7 @@ class Cell {
   }
 }
 
-type CellPredicate = (Cell) => boolean;
+type CellPredicate = (c: Cell) => boolean;
 
 class Board {
   tiles: Tile[][];
@@ -106,6 +106,13 @@ class Board {
     this.tiles = tiles;
     // This assumes there's only one player in the map.
     this.player = this.cells(c => c.is(Tile.PLAYER)).next().value;
+  }
+
+  draw(g: CanvasRenderingContext2D) {
+    for (let c of this.cells(c => tileColors.has(c.tile()))) {
+      g.fillStyle = tileColors.get(c.tile());
+      g.fillRect(c.x * TILE_SIZE, c.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    }
   }
 
   move(dx: number, dy: number) {
@@ -119,9 +126,32 @@ class Board {
   }
 
   movePlayerTo(c: Cell) {
-    maybeUnlock(c.tile());
+    this.maybeUnlock(c.tile());
     moveTile(this.player, c);
     this.player = c;
+  }
+
+  maybeUnlock(current: Tile) {
+    if (locksAndKeys.has(current)) {
+      this.remove(locksAndKeys.get(current));
+    }
+  }
+
+  dropTilesOneCell() {
+    for (let c of this.cells(c => canFall(c.tile()))) {
+      if (c.y < this.tiles.length - 1) {
+        let below = c.below();
+        if (below.is(Tile.AIR)) {
+          moveTile(c, below);
+        }
+      }
+    }
+  }
+
+  remove(tile: Tile) {
+    for (let c of this.cells(c => c.is(tile))) {
+      c.clear();
+    }
   }
 
   cell(x: number, y: number): Cell {
@@ -151,22 +181,14 @@ let board: Board = new Board([
   [2, 2, 2, 2, 2, 2, 2, 2],
 ]);
 
-function remove(tile: Tile) {
-  for (let c of board.cells(c => c.is(tile))) {
-    c.clear();
-  }
-}
+
 
 function moveTile(from: Cell, to: Cell) {
   to.setTile(from.tile())
   from.clear();
 }
 
-function maybeUnlock(current: Tile) {
-  if (locksAndKeys.has(current)) {
-    remove(locksAndKeys.get(current));
-  }
-}
+
 
 function canPush(goingTo: Cell, dx: number): boolean {
   const isPushable = goingTo.is(Tile.STONE) || goingTo.is(Tile.BOX);
@@ -178,23 +200,12 @@ function canPush(goingTo: Cell, dx: number): boolean {
 
 function update() {
   processInputs();
-  dropTilesOneCell();
+  board.dropTilesOneCell();
 }
 
 function processInputs() {
   while (inputs.length > 0) {
     inputs.pop()();
-  }
-}
-
-function dropTilesOneCell() {
-  for (let c of board.cells(c => canFall(c.tile()))) {
-    if (c.y < board.tiles.length - 1) {
-      let below = c.below();
-      if (below.is(Tile.AIR)) {
-        moveTile(c, below);
-      }
-    }
   }
 }
 
@@ -206,14 +217,7 @@ function draw() {
   let canvas = document.getElementById("GameCanvas") as HTMLCanvasElement;
   let g = canvas.getContext("2d");
   g.clearRect(0, 0, canvas.width, canvas.height);
-  drawMap(g);
-}
-
-function drawMap(g: CanvasRenderingContext2D) {
-  for (let c of board.cells(c => tileColors.has(c.tile()))) {
-    g.fillStyle = tileColors.get(c.tile());
-    g.fillRect(c.x * TILE_SIZE, c.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-  }
+  board.draw(g);
 }
 
 function gameLoop() {
