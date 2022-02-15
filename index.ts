@@ -118,15 +118,20 @@ function moveVertical(dy: number) {
 
 function update() {
   while (inputs.length > 0) {
-    let current = inputs.pop();
-    if (current === Input.LEFT)
-      moveHorizontal(-1);
-    else if (current === Input.RIGHT)
-      moveHorizontal(1);
-    else if (current === Input.UP)
-      moveVertical(-1);
-    else if (current === Input.DOWN)
-      moveVertical(1);
+    switch (inputs.pop()) {
+      case Input.LEFT:
+        moveHorizontal(-1);
+        break;
+      case Input.RIGHT:
+        moveHorizontal(1);
+        break;
+      case Input.UP:
+        moveVertical(-1);
+        break;
+      case Input.DOWN:
+        moveVertical(1);
+        break;
+    }
   }
 
   dropTiles();
