@@ -180,20 +180,18 @@ let board: Board = new Board([
   [2, 2, 2, 2, 2, 2, 2, 2],
 ]);
 
-let inputs: Action[] = [];
-
-const actions = {
-  UP: () => board.move(0, -1),
-  DOWN: () => board.move(0, 1),
-  LEFT: () => board.move(-1, 0),
-  RIGHT: () => board.move(1, 0),
-};
-
 const keyMap: Map<string, Action> = new Map<string, Action>();
-["ArrowUp", "w"].forEach(x => keyMap.set(x, actions.UP));
-["ArrowDown", "s"].forEach(x => keyMap.set(x, actions.DOWN);
-["ArrowLeft", "a"].forEach(x => keyMap.set(x, actions.LEFT);
-["ArrowRight", "d"].forEach(x => keyMap.set(x, actions.RIGHT);
+
+function keybinding(keys: string[], action: Action) {
+  keys.forEach(k => keyMap.set(k, action));
+}
+
+keybinding(["ArrowUp", "w"], () => board.move(0, -1));
+keybinding(["ArrowDown", "s"], () => board.move(0, 1));
+keybinding(["ArrowLeft", "a"], () => board.move(-1, 0));
+keybinding(["ArrowRight", "d"], () => board.move(1, 0));
+
+let actions: Action[] = [];
 
 function gameLoop() {
   let start = Date.now();
@@ -203,8 +201,8 @@ function gameLoop() {
 }
 
 function update() {
-  while (inputs.length > 0) {
-    inputs.pop()();
+  while (actions.length > 0) {
+    actions.pop()();
   }
   board.dropTilesOneCell();
 }
@@ -218,7 +216,7 @@ function draw() {
 
 function keyHandler(e: KeyboardEvent) {
   if (keyMap.has(e.key)) {
-    inputs.push(keyMap.get(e.key));
+    actions.push(keyMap.get(e.key));
   }
 }
 
