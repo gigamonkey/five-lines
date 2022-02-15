@@ -14,6 +14,8 @@ enum Tile {
   KEY2, LOCK2
 }
 
+const empty = new Set<Tile>([Tile.AIR, Tile.FLUX, Tile.KEY1, Tile.KEY2]);
+
 const locksAndKeys: any = {};
 locksAndKeys[Tile.KEY1] = Tile.LOCK1;
 locksAndKeys[Tile.KEY2] = Tile.LOCK2;
@@ -72,7 +74,7 @@ function moveHorizontal(dx: number) {
   const goingTo = new Point(player.x + dx, player.y);
   const newTile = map[goingTo.y][goingTo.x];
 
-  if (canOccupy(newTile) {
+  if (canOccupy(newTile)) {
     moveToTile(goingTo);
   } else if (canPush(goingTo, dx)) {
     map[goingTo.y][goingTo.x + dx] = newTile;
@@ -80,11 +82,11 @@ function moveHorizontal(dx: number) {
   }
 }
 
-function canOccupy(newTile: Tile): boolean {
-  return newTile === Tile.FLUX || newTile === Tile.AIR || newTile === Tile.KEY1 || newTile === Tile.KEY2;
+function canOccupy(tile: Tile): boolean {
+  return empty.has(tile);
 }
 
-function canPush(goingTo: Point, dx: number) {
+function canPush(goingTo: Point, dx: number): boolean {
   const newTile = map[goingTo.y][goingTo.x];
   const isPushable = newTile === Tile.STONE || newTile === Tile.BOX;
   const emptyAfter = map[goingTo.y][goingTo.x + dx] === Tile.AIR;
