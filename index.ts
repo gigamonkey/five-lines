@@ -93,9 +93,9 @@ class Cell {
     // FIXME I'm not sure what the check for the cell below not being empty is
     // about as it seems like it must always be true unless the block is
     // floating already.
-    const emptyAfter = this.dx(dx).isEmpty();
-    const emptyBelow = this.below().isEmpty(); 
-    return this.canFall() && emptyAfter && !emptyBelow;
+    const after = this.dx(dx);
+    const below = this.below(); 
+    return this.canFall() && after.isEmpty() && !below.isEmpty();
   }
   
 }
