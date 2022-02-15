@@ -16,21 +16,23 @@ enum Tile {
 
 const empty = new Set<Tile>([Tile.AIR, Tile.FLUX, Tile.KEY1, Tile.KEY2]);
 
-const locksAndKeys: Map<Tile, Tile> = new Map<Tile, Tile>();
-locksAndKeys.set(Tile.KEY1, Tile.LOCK1);
-locksAndKeys.set(Tile.KEY2, Tile.LOCK2);
+const locksAndKeys: Map<Tile, Tile> = new Map<Tile, Tile>([
+  [Tile.KEY1, Tile.LOCK1],
+  [Tile.KEY2, Tile.LOCK2],
+]);
 
-const tileColors = new Map<Tile, string>();
-tileColors.set(Tile.FLUX, "#ccffcc");
-tileColors.set(Tile.UNBREAKABLE, "#999999");
-tileColors.set(Tile.STONE, "#0000cc");
-tileColors.set(Tile.FALLING_STONE, "#0000cc");
-tileColors.set(Tile.BOX, "#8b4513");
-tileColors.set(Tile.FALLING_BOX, "#8b4513");
-tileColors.set(Tile.KEY1, "#ffcc00");
-tileColors.set(Tile.LOCK1, "#ffcc00");
-tileColors.set(Tile.KEY2, "#00ccff");
-tileColors.set(Tile.LOCK2, "#00ccff");
+const tileColors = new Map<Tile, string>([
+  [Tile.FLUX, "#ccffcc"],
+  [Tile.UNBREAKABLE, "#999999"],
+  [Tile.STONE, "#0000cc"],
+  [Tile.FALLING_STONE, "#0000cc"],
+  [Tile.BOX, "#8b4513"],
+  [Tile.FALLING_BOX, "#8b4513"],
+  [Tile.KEY1, "#ffcc00"],
+  [Tile.LOCK1, "#ffcc00"],
+  [Tile.KEY2, "#00ccff"],
+  [Tile.LOCK2, "#00ccff"],
+]);
 
 enum Input {
   UP, DOWN, LEFT, RIGHT
