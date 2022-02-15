@@ -96,18 +96,23 @@ class Cell {
   }
 }
 
+type CellPredicate = (Cell) => boolean;
+
 class Board {
   tiles: Tile[][];
+  player: Cell;
 
   constructor(tiles: Tile[][]) {
     this.tiles = tiles;
+    // This assumes there's only one player in the map.
+    this.player = this.cells(c => c.is(Tile.PLAYER)).next().value;
   }
 
-  cell(x: number, y: number) {
+  cell(x: number, y: number): Cell {
     return new Cell(x, y, this.tiles);
   }
 
-  *cells(p: (Cell) => boolean) {
+  *cells(p: CellPredicate): Generator<Cell> {
     for (let y = 0; y < this.tiles.length; y++) {
       for (let x = 0; x < this.tiles[y].length; x++) {
         let cell = this.cell(x, y);
@@ -117,6 +122,7 @@ class Board {
       }
     }
   }
+
 
 }
 
@@ -129,8 +135,6 @@ let board: Board = new Board([
   [2, 2, 2, 2, 2, 2, 2, 2],
 ]);
 
-let player = board.cell(1, 1);
-
 function remove(tile: Tile) {
   for (let c of board.cells(c => c.is(tile))) {
     c.clear();
@@ -139,8 +143,8 @@ function remove(tile: Tile) {
 
 function movePlayerTo(c: Cell) {
   maybeUnlock(c.tile());
-  moveTile(player, c);
-  player = c;
+  moveTile(board.player, c);
+  board.player = c;
 }
 
 function moveTile(from: Cell, to: Cell) {
@@ -155,7 +159,7 @@ function maybeUnlock(current: Tile) {
 }
 
 function move(dx: number, dy: number) {
-  const goingTo = player.dx(dx).dy(dy);
+  const goingTo = board.player.dx(dx).dy(dy);
   if (canBeOccupied.has(goingTo.tile())) {
     movePlayerTo(goingTo);
   } else if (dx !== 0 && canPush(goingTo, dx)) {
