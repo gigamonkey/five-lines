@@ -89,9 +89,13 @@ function remove(tile: Tile) {
 
 function moveToTile(p: Point) {
   removeLocks(map[p.y][p.x]);
-  map[player.y][player.x] = Tile.AIR;
-  map[p.y][p.x] = Tile.PLAYER;
+  moveTile(player, p);
   player = p;
+}
+
+function moveTile(from: Point, to: Point) {
+  map[to.y][to.x] = map[from.y][from.x];
+  map[from.y][from.x] = Tile.AIR;
 }
 
 function removeLocks(current: Tile) {
@@ -145,8 +149,7 @@ function dropTilesOneCell() {
     for (let x = 0; x < map[y].length; x++) {
       let tile = map[y][x];
       if (canFall(tile) && map[y + 1][x] === Tile.AIR) {
-        map[y + 1][x] = tile;
-        map[y][x] = Tile.AIR;
+        moveTile(new Point(x, y), new Point(x, y + 1));
       }
     }
   }
