@@ -74,8 +74,8 @@ function moveHorizontal(dx: number) {
 
   if (canOccupy(newTile) {
     moveToTile(goingTo);
-  } else if (canPush(newTile, dx)) {
-    map[player.y][player.x + dx + dx] = newTile;
+  } else if (canPush(goingTo, dx)) {
+    map[goingTo.y][goingTo.x + dx] = newTile;
     moveToTile(goingTo);
   }
 }
@@ -84,10 +84,12 @@ function canOccupy(newTile: Tile): boolean {
   return newTile === Tile.FLUX || newTile === Tile.AIR || newTile === Tile.KEY1 || newTile === Tile.KEY2;
 }
 
-function canPush(newTile: Tile, dx: number) {
+function canPush(goingTo: Point, dx: number) {
+  const newTile = map[goingTo.y][goingTo.x];
   const isPushable = newTile === Tile.STONE || newTile === Tile.BOX;
-  const emptyAfter = map[player.y][player.x + dx + dx] === Tile.AIR;
-  const emptyBelow = map[player.y + 1][player.x + dx] === Tile.AIR; // FIXME seems like this can't happen.
+  const emptyAfter = map[goingTo.y][goingTo.x + dx] === Tile.AIR;
+  const emptyBelow = map[goingTo.y + 1][goingTo.x] === Tile.AIR; // FIXME seems like this can't happen unless the block is floating already.
+
   return isPushable && emptyAfter && !emptyBelow;
 }
 
