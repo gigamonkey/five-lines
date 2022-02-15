@@ -2,6 +2,11 @@ const TILE_SIZE = 30;
 const FPS = 30;
 const MILLIS_PER_FRAME = 1000 / FPS;
 
+const LEFT_KEY = "ArrowLeft";
+const UP_KEY = "ArrowUp";
+const RIGHT_KEY = "ArrowRight";
+const DOWN_KEY = "ArrowDown";
+
 enum Tile {
   AIR,
   FLUX,
@@ -181,17 +186,13 @@ function gameLoop() {
   setTimeout(gameLoop, Math.max(0, (start + MILLIS_PER_FRAME) - Date.now()));
 }
 
+function keyHandler(e) {
+    if (e.key === LEFT_KEY || e.key === "a") inputs.push(Input.LEFT);
+    else if (e.key === UP_KEY || e.key === "w") inputs.push(Input.UP);
+    else if (e.key === RIGHT_KEY || e.key === "d") inputs.push(Input.RIGHT);
+    else if (e.key === DOWN_KEY || e.key === "s") inputs.push(Input.DOWN);
+}
+
 window.onload = gameLoop;
-
-const LEFT_KEY = "ArrowLeft";
-const UP_KEY = "ArrowUp";
-const RIGHT_KEY = "ArrowRight";
-const DOWN_KEY = "ArrowDown";
-
-window.onkeydown = e => {
-  if (e.key === LEFT_KEY || e.key === "a") inputs.push(Input.LEFT);
-  else if (e.key === UP_KEY || e.key === "w") inputs.push(Input.UP);
-  else if (e.key === RIGHT_KEY || e.key === "d") inputs.push(Input.RIGHT);
-  else if (e.key === DOWN_KEY || e.key === "s") inputs.push(Input.DOWN);
-};
+window.onkeydown = keyHandler;
 
