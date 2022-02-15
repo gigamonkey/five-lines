@@ -5,38 +5,19 @@ const TILE_SIZE = 30;
 const FPS = 30;
 const MILLIS_PER_FRAME = 1000 / FPS;
 
-enum Tile {
-  AIR,
-  FLUX,
-  UNBREAKABLE,
-  PLAYER,
-  STONE,
-  BOX,
-  KEY1,
-  LOCK1,
-  KEY2,
-  LOCK2,
+enum Kind { CONSUMABLE, PUSHABLE, IMMOVABLE, PLAYER, EMPTY };
+
+class Tile {
+  color: string;
+  kind: Kind;
+  unlocks: Tile;
+
+  constructor(color: string, kind: Kind) {
+    this.color = color;
+    this.kind = kind;
+    this.unlocks = null;
+  }
 }
-
-const consumable = new Set<Tile>([Tile.AIR, Tile.FLUX, Tile.KEY1, Tile.KEY2]);
-
-const locksAndKeys: Map<Tile, Tile> = new Map<Tile, Tile>([
-  [Tile.KEY1, Tile.LOCK1],
-  [Tile.KEY2, Tile.LOCK2],
-]);
-
-const tileColors = new Map<Tile, string>([
-  [Tile.AIR, "#ffffff"],
-  [Tile.FLUX, "#ccffcc"],
-  [Tile.UNBREAKABLE, "#999999"],
-  [Tile.PLAYER, "#ff0000"],
-  [Tile.STONE, "#0000cc"],
-  [Tile.BOX, "#8b4513"],
-  [Tile.KEY1, "#ffccdd"],
-  [Tile.LOCK1, "#ffcc00"],
-  [Tile.KEY2, "#ddccff"],
-  [Tile.LOCK2, "#00ccff"],
-]);
 
 class Cell {
   x: number;
@@ -50,7 +31,7 @@ class Cell {
   }
 
   draw(g: CanvasRenderingContext2D) {
-    g.fillStyle = tileColors.get(this.tile());
+    g.fillStyle = this.tile().color;
     g.fillRect(this.x * TILE_SIZE, this.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
   }
 
@@ -75,7 +56,7 @@ class Cell {
   }
 
   isEmpty() {
-    return this.is(Tile.AIR);
+    return this.tile().kind == Kind.EMPTY;
   }
 
   setTile(tile: Tile) {
@@ -83,7 +64,7 @@ class Cell {
   }
 
   clear() {
-    this.setTile(Tile.AIR);
+    this.setTile(TILES.AIR); // FIXME, this should be parameterized.
   }
 
   moveTile(to: Cell) {
@@ -92,11 +73,11 @@ class Cell {
   }
 
   canBeConsumed() {
-    return consumable.has(this.tile());
+    return this.tile().kind == Kind.CONSUMABLE;
   }
 
   canFall() {
-    return this.is(Tile.STONE) || this.is(Tile.BOX);
+    return this.tile().kind == Kind.PUSHABLE;
   }
 
   canBePushed(dx: number): boolean {
@@ -113,9 +94,9 @@ class Board {
   tiles: Tile[][];
   player: Cell;
 
-  constructor(tiles: Tile[][]) {
-    this.tiles = tiles;
-    let players = this.cells(c => c.is(Tile.PLAYER));
+  constructor(numbers: number[][]) {
+    this.tiles = numbers.map(row => row.map(n => TILE_NUMBERS[n]));
+    let players = this.cells(c => c.is(TILES.PLAYER));
     this.player = players.next().value;
     console.assert(players.next().done, "Only one player");
   }
@@ -128,7 +109,7 @@ class Board {
 
   move(dx: number, dy: number) {
     const goingTo = this.player.dx(dx).dy(dy);
-    if (goingTo.canBeConsumed()) {
+    if (goingTo.isEmpty() || goingTo.canBeConsumed()) {
       this.movePlayerTo(goingTo);
     } else if (dx !== 0 && goingTo.canBePushed(dx)) {
       goingTo.moveTile(goingTo.dx(dx));
@@ -143,8 +124,8 @@ class Board {
   }
 
   maybeUnlock(current: Tile) {
-    if (locksAndKeys.has(current)) {
-      this.remove(locksAndKeys.get(current));
+    if (current.unlocks !== null) {
+      this.remove(current.unlocks);
     }
   }
 
@@ -212,6 +193,35 @@ class Keybindings {
 
 const canvas = document.getElementById("GameCanvas") as HTMLCanvasElement;
 const g = canvas.getContext("2d");
+
+const TILES = {
+  AIR: new Tile("#ffffff", Kind.EMPTY),
+  FLUX: new Tile("#ccffcc", Kind.CONSUMABLE),
+  UNBREAKABLE: new Tile("#999999", Kind.IMMOVABLE),
+  PLAYER: new Tile("#ff0000", Kind.PLAYER),
+  STONE: new Tile("#0000cc", Kind.PUSHABLE),
+  BOX: new Tile("#8b4513", Kind.PUSHABLE),
+  KEY1: new Tile("#ffccdd", Kind.CONSUMABLE),
+  LOCK1: new Tile("#ffcc00", Kind.IMMOVABLE),
+  KEY2: new Tile("#ddccff", Kind.CONSUMABLE),
+  LOCK2: new Tile("#00ccff", Kind.IMMOVABLE),
+};
+
+TILES.KEY1.unlocks = TILES.LOCK1;
+TILES.KEY2.unlocks = TILES.LOCK2;
+
+const TILE_NUMBERS = [
+  TILES.AIR, 
+  TILES.FLUX, 
+  TILES.UNBREAKABLE, 
+  TILES.PLAYER, 
+  TILES.STONE, 
+  TILES.BOX, 
+  TILES.KEY1, 
+  TILES.LOCK1, 
+  TILES.KEY2, 
+  TILES.LOCK2, 
+];
 
 let board: Board = new Board([
   [2, 2, 2, 2, 2, 2, 2, 2],
