@@ -22,12 +22,12 @@ class Tile {
 class Cell {
   x: number;
   y: number;
-  tiles: Tile[][];
+  board: Board;
 
-  constructor(x: number, y: number, map: Tile[][]) {
+  constructor(x: number, y: number, board: Board) {
     this.x = x;
     this.y = y;
-    this.tiles = map;
+    this.board = board;
   }
 
   draw(g: CanvasRenderingContext2D) {
@@ -36,11 +36,11 @@ class Cell {
   }
 
   dx(d: number): Cell {
-    return new Cell(this.x + d, this.y, this.tiles);
+    return new Cell(this.x + d, this.y, this.board);
   }
 
   dy(d: number): Cell {
-    return new Cell(this.x, this.y + d, this.tiles);
+    return new Cell(this.x, this.y + d, this.board);
   }
 
   below() {
@@ -48,7 +48,7 @@ class Cell {
   }
 
   tile() {
-    return this.tiles[this.y][this.x];
+    return this.board.tiles[this.y][this.x];
   }
 
   is(tile: Tile) {
@@ -60,11 +60,11 @@ class Cell {
   }
 
   setTile(tile: Tile) {
-    this.tiles[this.y][this.x] = tile;
+    this.board.tiles[this.y][this.x] = tile;
   }
 
   clear() {
-    this.setTile(TILES.AIR); // FIXME, this should be parameterized.
+    this.setTile(board.emptyTile);
   }
 
   moveTile(to: Cell) {
@@ -93,12 +93,14 @@ class Cell {
 class Board {
   tiles: Tile[][];
   player: Cell;
+  emptyTile: Tile;
 
-  constructor(numbers: number[][]) {
+  constructor(numbers: number[][], playerTile: Tile, emptyTile: Tile) {
     this.tiles = numbers.map(row => row.map(n => TILE_NUMBERS[n]));
-    let players = this.cells(c => c.is(TILES.PLAYER));
+    let players = this.cells(c => c.is(playerTile));
     this.player = players.next().value;
     console.assert(players.next().done, "Only one player");
+    this.emptyTile = emptyTile;
   }
 
   draw(g: CanvasRenderingContext2D) {
@@ -147,7 +149,7 @@ class Board {
   }
 
   cell(x: number, y: number): Cell {
-    return new Cell(x, y, this.tiles);
+    return new Cell(x, y, this);
   }
 
   *cells(p: CellPredicate): Generator<Cell> {
@@ -223,14 +225,16 @@ const TILE_NUMBERS = [
   TILES.LOCK2, 
 ];
 
-let board: Board = new Board([
+const map = [
   [2, 2, 2, 2, 2, 2, 2, 2],
   [2, 3, 0, 1, 1, 2, 0, 2],
   [2, 4, 2, 5, 1, 2, 0, 2],
   [2, 6, 4, 1, 1, 2, 0, 2],
   [2, 4, 1, 1, 1, 7, 0, 2],
   [2, 2, 2, 2, 2, 2, 2, 2],
-]);
+];
+
+const board: Board = new Board(map, TILES.PLAYER, TILES.AIR);
 
 const keybindings = new Keybindings();
 
