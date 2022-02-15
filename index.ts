@@ -62,10 +62,10 @@ let map: Tile[][] = [
 let inputs: Input[] = [];
 
 function remove(tile: Tile) {
-  for (let row = 0; row < map.length; row++) {
-    for (let col = 0; col < map[row].length; col++) {
-      if (map[row][col] === tile) {
-        map[row][col] = Tile.AIR;
+  for (let y = 0; y < map.length; y++) {
+    for (let x = 0; x < map[y].length; x++) {
+      if (map[y][x] === tile) {
+        map[y][x] = Tile.AIR;
       }
     }
   }
