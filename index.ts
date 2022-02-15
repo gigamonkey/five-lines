@@ -26,9 +26,9 @@ const tileColors = new Map<Tile, string>([
   [Tile.PLAYER, "#ff0000"],
   [Tile.STONE, "#0000cc"],
   [Tile.BOX, "#8b4513"],
-  [Tile.KEY1, "#ffcc00"],
+  [Tile.KEY1, "#ffccdd"],
   [Tile.LOCK1, "#ffcc00"],
-  [Tile.KEY2, "#00ccff"],
+  [Tile.KEY2, "#ddccff"],
   [Tile.LOCK2, "#00ccff"],
 ]);
 
