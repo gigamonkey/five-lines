@@ -116,6 +116,11 @@ function moveVertical(dy: number) {
 }
 
 function update() {
+  processInputs();
+  dropTiles();
+}
+
+function processInputs() {
   while (inputs.length > 0) {
     switch (inputs.pop()) {
       case Input.LEFT:
@@ -132,7 +137,6 @@ function update() {
         break;
     }
   }
-  dropTiles();
 }
 
 // Drop tiles one cell per frame.
