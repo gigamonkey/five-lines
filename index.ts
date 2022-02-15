@@ -62,6 +62,14 @@ class Point {
     this.x = x;
     this.y = y;
   }
+
+  dx(d: number): Point {
+    return new Point(this.x + d, this.y);
+  }
+
+  dy(d: number): Point {
+    return new Point(this.x, this.y + d);
+  }
 }
 
 let player = new Point(1, 1);
@@ -105,13 +113,13 @@ function removeLocks(current: Tile) {
 }
 
 function moveHorizontal(dx: number) {
-  const goingTo = new Point(player.x + dx, player.y);
+  const goingTo = player.dx(dx);
   const newTile = map[goingTo.y][goingTo.x];
 
   if (canBeOccupied.has(newTile)) {
     movePlayerTo(goingTo);
   } else if (canPush(goingTo, dx)) {
-    moveTile(goingTo, new Point(goingTo.x + dx, goingTo.y));
+    moveTile(goingTo, goingTo.dx(dx));
     movePlayerTo(goingTo);
   }
 }
@@ -127,7 +135,7 @@ function canPush(goingTo: Point, dx: number): boolean {
 }
 
 function moveVertical(dy: number) {
-  const goingTo = new Point(player.x, player.y + dy);
+  const goingTo = player.dy(dy);;
   if (canBeOccupied.has(map[goingTo.y][goingTo.x])) {
     movePlayerTo(goingTo);
   }
@@ -149,7 +157,8 @@ function dropTilesOneCell() {
     for (let x = 0; x < map[y].length; x++) {
       let tile = map[y][x];
       if (canFall(tile) && map[y + 1][x] === Tile.AIR) {
-        moveTile(new Point(x, y), new Point(x, y + 1));
+        let p = new Point(x, y);
+        moveTile(p, p.dy(1));
       }
     }
   }
