@@ -38,9 +38,6 @@ const tileColors = new Map<Tile, string>([
 ]);
 
 
-
-
-
 class Cell {
   x: number;
   y: number;
@@ -85,7 +82,6 @@ class Cell {
     this.clear();
   }
 }
-
 
 class Board {
   tiles: Tile[][];
@@ -158,8 +154,6 @@ class Board {
       }
     }
   }
-
-
 }
 
 function canFall(tile: Tile) {
@@ -173,7 +167,9 @@ function canPush(goingTo: Cell, dx: number): boolean {
   return isPushable && emptyAfter && !emptyBelow;
 }
 
-
+//
+// Main
+// 
 
 let board: Board = new Board([
   [2, 2, 2, 2, 2, 2, 2, 2],
@@ -193,17 +189,11 @@ const actions = {
   RIGHT: () => board.move(1, 0),
 };
 
-const keyMap: Map<string, Action> = new Map<string, Action>([
-  ["ArrowUp", actions.UP],
-  ["w", actions.UP],
-  ["ArrowDown", actions.DOWN],
-  ["s", actions.DOWN],
-  ["ArrowLeft", actions.LEFT],
-  ["a", actions.LEFT],
-  ["ArrowRight", actions.RIGHT],
-  ["d", actions.RIGHT],
-]);
-
+const keyMap: Map<string, Action> = new Map<string, Action>();
+["ArrowUp", "w"].forEach(x => keyMap.set(x, actions.UP));
+["ArrowDown", "s"].forEach(x => keyMap.set(x, actions.DOWN);
+["ArrowLeft", "a"].forEach(x => keyMap.set(x, actions.LEFT);
+["ArrowRight", "d"].forEach(x => keyMap.set(x, actions.RIGHT);
 
 function gameLoop() {
   let start = Date.now();
