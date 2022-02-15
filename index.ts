@@ -35,10 +35,10 @@ const tileColors = new Map<Tile, string>([
 ]);
 
 const Input = {
-  UP: () => moveVertical(-1),
-  DOWN: () => moveVertical(1),
-  LEFT: () => moveHorizontal(-1),
-  RIGHT: () => moveHorizontal(1),
+  UP: () => move(0, -1),
+  DOWN: () => move(0, 1),
+  LEFT: () => move(-1, 0),
+  RIGHT: () => move(1, 0),
 }
 
 const keyMap: Map<string, Input> = new Map<string, Input>([
@@ -134,11 +134,11 @@ function maybeUnlock(current: Tile) {
   }
 }
 
-function moveHorizontal(dx: number) {
-  const goingTo = player.dx(dx);
+function move(dx: number, dy: number) {
+  const goingTo = player.dx(dx).dy(dy);
   if (canBeOccupied.has(goingTo.tile())) {
     movePlayerTo(goingTo);
-  } else if (canPush(goingTo, dx)) {
+  } else if (dx !== 0 && canPush(goingTo, dx)) {
     moveTile(goingTo, goingTo.dx(dx));
     movePlayerTo(goingTo);
   }
@@ -150,13 +150,6 @@ function canPush(goingTo: Cell, dx: number): boolean {
   const emptyBelow = goingTo.below().is(Tile.AIR); // FIXME seems like this can't happen unless the block is floating already.
 
   return isPushable && emptyAfter && !emptyBelow;
-}
-
-function moveVertical(dy: number) {
-  const goingTo = player.dy(dy);;
-  if (canBeOccupied.has(goingTo.tile())) {
-    movePlayerTo(goingTo);
-  }
 }
 
 function update() {
