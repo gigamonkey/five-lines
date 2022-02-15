@@ -42,10 +42,19 @@ function remove(tile: Tile) {
 }
 
 function moveToTile(newx: number, newy: number) {
+  removeLocks(map[newy][newx]);
   map[playery][playerx] = Tile.AIR;
   map[newy][newx] = Tile.PLAYER;
   playerx = newx;
   playery = newy;
+}
+
+function removeLocks(current: Tile) {
+  if (current === Tile.KEY1) {
+    remove(Tile.LOCK1);
+  } else if (current === Tile.KEY2) {
+    remove(Tile.LOCK2);
+  }
 }
 
 function moveHorizontal(dx: number) {
@@ -61,11 +70,9 @@ function moveHorizontal(dx: number) {
     moveToTile(playerx + dx, playery);
 
   } else if (goingTo === Tile.KEY1) {
-    remove(Tile.LOCK1);
     moveToTile(playerx + dx, playery);
 
   } else if (goingTo === Tile.KEY2) {
-    remove(Tile.LOCK2);
     moveToTile(playerx + dx, playery);
   }
 }
@@ -75,10 +82,8 @@ function moveVertical(dy: number) {
   if (goingTo === Tile.FLUX || goingTo === Tile.AIR) {
     moveToTile(playerx, playery + dy);
   } else if (goingTo === Tile.KEY1) {
-    remove(Tile.LOCK1);
     moveToTile(playerx, playery + dy);
   } else if (goingTo === Tile.KEY2) {
-    remove(Tile.LOCK2);
     moveToTile(playerx, playery + dy);
   }
 }
