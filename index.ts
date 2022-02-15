@@ -141,7 +141,7 @@ function processInputs() {
 }
 
 function dropTilesOneCell() {
-  for (let y = map.length - 1; y >= 0; y--) {
+  for (let y = map.length - 2; y >= 0; y--) {
     for (let x = 0; x < map[y].length; x++) {
       let tile = map[y][x];
       if (canFall(tile) && map[y + 1][x] === Tile.AIR) {
