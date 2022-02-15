@@ -37,7 +37,6 @@ const tileColors = new Map<Tile, string>([
   [Tile.LOCK2, "#00ccff"],
 ]);
 
-
 class Cell {
   x: number;
   y: number;
@@ -197,6 +196,9 @@ function canPush(goingTo: Cell, dx: number): boolean {
 // Main
 // 
 
+const canvas = document.getElementById("GameCanvas") as HTMLCanvasElement;
+const g = canvas.getContext("2d");
+
 let board: Board = new Board([
   [2, 2, 2, 2, 2, 2, 2, 2],
   [2, 3, 0, 1, 1, 2, 0, 2],
@@ -226,8 +228,6 @@ function update() {
 }
 
 function draw() {
-  let canvas = document.getElementById("GameCanvas") as HTMLCanvasElement;
-  let g = canvas.getContext("2d");
   g.clearRect(0, 0, canvas.width, canvas.height);
   board.draw(g);
 }
