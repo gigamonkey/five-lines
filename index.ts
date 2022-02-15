@@ -68,6 +68,10 @@ class Cell {
     return this.tile() === tile;
   }
 
+  isEmpty() {
+    return this.is(Tile.AIR);
+  }
+
   setTile(tile: Tile) {
     this.tiles[this.y][this.x] = tile;
   }
@@ -80,6 +84,20 @@ class Cell {
     to.setTile(this.tile())
     this.clear();
   }
+
+  canFall() {
+    return this.is(Tile.STONE) || this.is(Tile.BOX);
+  }
+
+  canPush(dx: number): boolean {
+    // FIXME I'm not sure what the check for the cell below not being empty is
+    // about as it seems like it must always be true unless the block is
+    // floating already.
+    const emptyAfter = this.dx(dx).isEmpty();
+    const emptyBelow = this.below().isEmpty(); 
+    return this.canFall() && emptyAfter && !emptyBelow;
+  }
+  
 }
 
 class Board {
@@ -104,7 +122,7 @@ class Board {
     const goingTo = this.player.dx(dx).dy(dy);
     if (canBeOccupied.has(goingTo.tile())) {
       this.movePlayerTo(goingTo);
-    } else if (dx !== 0 && canPush(goingTo, dx)) {
+    } else if (dx !== 0 && goingTo.canPush(dx)) {
       goingTo.moveTile(goingTo.dx(dx));
       this.movePlayerTo(goingTo);
     }
@@ -123,7 +141,7 @@ class Board {
   }
 
   dropTilesOneCell() {
-    for (let c of this.cells(c => canFall(c.tile()))) {
+    for (let c of this.cells(c => c.canFall())) {
       if (c.y < this.tiles.length - 1) {
         let below = c.below();
         if (below.is(Tile.AIR)) {
@@ -181,16 +199,6 @@ class Keybindings {
   }
 }
 
-function canFall(tile: Tile) {
-  return tile === Tile.STONE || tile === Tile.BOX;
-}
-
-function canPush(goingTo: Cell, dx: number): boolean {
-  const isPushable = goingTo.is(Tile.STONE) || goingTo.is(Tile.BOX);
-  const emptyAfter = goingTo.dx(dx).is(Tile.AIR);
-  const emptyBelow = goingTo.below().is(Tile.AIR); // FIXME seems like this can't happen unless the block is floating already.
-  return isPushable && emptyAfter && !emptyBelow;
-}
 
 //
 // Main
