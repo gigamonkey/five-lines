@@ -24,6 +24,7 @@ const locksAndKeys: Map<Tile, Tile> = new Map<Tile, Tile>([
 const tileColors = new Map<Tile, string>([
   [Tile.FLUX, "#ccffcc"],
   [Tile.UNBREAKABLE, "#999999"],
+  [Tile.PLAYER, "#ff0000"],
   [Tile.STONE, "#0000cc"],
   [Tile.FALLING_STONE, "#0000cc"],
   [Tile.BOX, "#8b4513"],
@@ -33,6 +34,7 @@ const tileColors = new Map<Tile, string>([
   [Tile.KEY2, "#00ccff"],
   [Tile.LOCK2, "#00ccff"],
 ]);
+
 
 enum Input {
   UP, DOWN, LEFT, RIGHT
@@ -162,7 +164,6 @@ function draw() {
   let g = canvas.getContext("2d");
   g.clearRect(0, 0, canvas.width, canvas.height);
   drawMap(g);
-  drawPlayer(g);
 }
 
 function drawMap(g: CanvasRenderingContext2D) {
@@ -175,11 +176,6 @@ function drawMap(g: CanvasRenderingContext2D) {
       }
     }
   }
-}
-
-function drawPlayer(g: CanvasRenderingContext2D): void {
-  g.fillStyle = "#ff0000";
-  g.fillRect(player.x * TILE_SIZE, player.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
 }
 
 function gameLoop() {
