@@ -79,6 +79,11 @@ class Cell {
   clear() {
     this.setTile(Tile.AIR);
   }
+
+  moveTile(to: Cell) {
+    to.setTile(this.tile())
+    this.clear();
+  }
 }
 
 
@@ -105,14 +110,14 @@ class Board {
     if (canBeOccupied.has(goingTo.tile())) {
       this.movePlayerTo(goingTo);
     } else if (dx !== 0 && canPush(goingTo, dx)) {
-      moveTile(goingTo, goingTo.dx(dx));
+      goingTo.moveTile(goingTo.dx(dx));
       this.movePlayerTo(goingTo);
     }
   }
 
   movePlayerTo(c: Cell) {
     this.maybeUnlock(c.tile());
-    moveTile(this.player, c);
+    this.player.moveTile(c);
     this.player = c;
   }
 
@@ -127,7 +132,7 @@ class Board {
       if (c.y < this.tiles.length - 1) {
         let below = c.below();
         if (below.is(Tile.AIR)) {
-          moveTile(c, below);
+          c.moveTile(below);
         }
       }
     }
@@ -155,13 +160,6 @@ class Board {
   }
 
 
-}
-
-
-
-function moveTile(from: Cell, to: Cell) {
-  to.setTile(from.tile())
-  from.clear();
 }
 
 function canFall(tile: Tile) {
