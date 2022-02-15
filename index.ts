@@ -87,7 +87,7 @@ function remove(tile: Tile) {
   }
 }
 
-function moveToTile(p: Point) {
+function movePlayerTo(p: Point) {
   removeLocks(map[p.y][p.x]);
   moveTile(player, p);
   player = p;
@@ -109,10 +109,10 @@ function moveHorizontal(dx: number) {
   const newTile = map[goingTo.y][goingTo.x];
 
   if (canBeOccupied.has(newTile)) {
-    moveToTile(goingTo);
+    movePlayerTo(goingTo);
   } else if (canPush(goingTo, dx)) {
-    map[goingTo.y][goingTo.x + dx] = newTile;
-    moveToTile(goingTo);
+    moveTile(goingTo, new Point(goingTo.x + dx, goingTo.y));
+    movePlayerTo(goingTo);
   }
 }
 
@@ -129,7 +129,7 @@ function canPush(goingTo: Point, dx: number): boolean {
 function moveVertical(dy: number) {
   const goingTo = new Point(player.x, player.y + dy);
   if (canBeOccupied.has(map[goingTo.y][goingTo.x])) {
-    moveToTile(goingTo);
+    movePlayerTo(goingTo);
   }
 }
 
