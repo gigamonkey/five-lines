@@ -26,6 +26,7 @@ const locksAndKeys: Map<Tile, Tile> = new Map<Tile, Tile>([
 ]);
 
 const tileColors = new Map<Tile, string>([
+  [Tile.AIR, "#ffffff"],
   [Tile.FLUX, "#ccffcc"],
   [Tile.UNBREAKABLE, "#999999"],
   [Tile.PLAYER, "#ff0000"],
@@ -46,6 +47,11 @@ class Cell {
     this.x = x;
     this.y = y;
     this.tiles = map;
+  }
+
+  draw(g: CanvasRenderingContext2D) {
+    g.fillStyle = tileColors.get(this.tile());
+    g.fillRect(this.x * TILE_SIZE, this.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
   }
 
   dx(d: number): Cell {
@@ -115,9 +121,8 @@ class Board {
   }
 
   draw(g: CanvasRenderingContext2D) {
-    for (let c of this.cells(c => tileColors.has(c.tile()))) {
-      g.fillStyle = tileColors.get(c.tile());
-      g.fillRect(c.x * TILE_SIZE, c.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    for (let c of this.cells(() => true)) {
+      c.draw(g);
     }
   }
 
@@ -168,9 +173,7 @@ class Board {
     for (let y = 0; y < this.tiles.length; y++) {
       for (let x = 0; x < this.tiles[y].length; x++) {
         let cell = this.cell(x, y);
-        if (p(cell)) {
-          yield cell;
-        }
+        if (p(cell)) yield cell;
       }
     }
   }
