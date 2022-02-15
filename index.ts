@@ -18,8 +18,18 @@ enum Input {
   UP, DOWN, LEFT, RIGHT
 }
 
-let playerx = 1;
-let playery = 1;
+class Point {
+  x: number;
+  y: number;
+
+  constructor(x: number, y: number) {
+    this.x = x;
+    this.y = y;
+  }
+}
+
+let player = new Point(1, 1);
+
 let map: Tile[][] = [
   [2, 2, 2, 2, 2, 2, 2, 2],
   [2, 3, 0, 1, 1, 2, 0, 2],
@@ -41,12 +51,11 @@ function remove(tile: Tile) {
   }
 }
 
-function moveToTile(newx: number, newy: number) {
-  removeLocks(map[newy][newx]);
-  map[playery][playerx] = Tile.AIR;
-  map[newy][newx] = Tile.PLAYER;
-  playerx = newx;
-  playery = newy;
+function moveToTile(p: Point) {
+  removeLocks(map[p.y][p.x]);
+  map[player.y][player.x] = Tile.AIR;
+  map[p.y][p.x] = Tile.PLAYER;
+  player = p;
 }
 
 function removeLocks(current: Tile) {
@@ -58,33 +67,35 @@ function removeLocks(current: Tile) {
 }
 
 function moveHorizontal(dx: number) {
-  const goingTo = map[playery][playerx + dx];
-  if (goingTo === Tile.FLUX || goingTo === Tile.AIR) {
-    moveToTile(playerx + dx, playery);
+  const goingTo = new Point(player.x + dx, player.y);
+  const newTile = map[goingTo.y][goingTo.x];
+  if (newTile === Tile.FLUX || newTile === Tile.AIR) {
+    moveToTile(goingTo);
 
-  } else if ((goingTo === Tile.STONE || goingTo === Tile.BOX)
-    && map[playery][playerx + dx + dx] === Tile.AIR
-    && map[playery + 1][playerx + dx] !== Tile.AIR) {
-    map[playery][playerx + dx + dx] = goingTo;
+  } else if ((newTile === Tile.STONE || newTile === Tile.BOX)
+    && map[player.y][player.x + dx + dx] === Tile.AIR
+    && map[player.y + 1][player.x + dx] !== Tile.AIR) {
+    map[player.y][player.x + dx + dx] = newTile;
 
-    moveToTile(playerx + dx, playery);
+    moveToTile(goingTo);
 
-  } else if (goingTo === Tile.KEY1) {
-    moveToTile(playerx + dx, playery);
+  } else if (newTile === Tile.KEY1) {
+    moveToTile(goingTo);
 
-  } else if (goingTo === Tile.KEY2) {
-    moveToTile(playerx + dx, playery);
+  } else if (newTile === Tile.KEY2) {
+    moveToTile(goingTo);
   }
 }
 
 function moveVertical(dy: number) {
-  const goingTo = map[playery + dy][playerx];
-  if (goingTo === Tile.FLUX || goingTo === Tile.AIR) {
-    moveToTile(playerx, playery + dy);
-  } else if (goingTo === Tile.KEY1) {
-    moveToTile(playerx, playery + dy);
-  } else if (goingTo === Tile.KEY2) {
-    moveToTile(playerx, playery + dy);
+  const goingTo = new Point(player.x, player.y + dy);
+  const newTile = map[goingTo.y][goingTo.x];
+  if (newTile === Tile.FLUX || newTile === Tile.AIR) {
+    moveToTile(goingTo);
+  } else if (newTile === Tile.KEY1) {
+    moveToTile(goingTo);
+  } else if (newTile === Tile.KEY2) {
+    moveToTile(goingTo);
   }
 }
 
@@ -154,7 +165,7 @@ function drawMap(g: CanvasRenderingContext2D) {
 
 function drawPlayer(g: CanvasRenderingContext2D): void {
   g.fillStyle = "#ff0000";
-  g.fillRect(playerx * TILE_SIZE, playery * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+  g.fillRect(player.x * TILE_SIZE, player.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
 }
 
 function gameLoop() {
