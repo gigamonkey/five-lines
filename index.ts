@@ -69,13 +69,10 @@ function removeLocks(current: Tile) {
 function moveHorizontal(dx: number) {
   const goingTo = new Point(player.x + dx, player.y);
   const newTile = map[goingTo.y][goingTo.x];
+
   if (canOccupy(newTile) {
     moveToTile(goingTo);
-
-  } else if ((newTile === Tile.STONE || newTile === Tile.BOX)
-    && map[player.y][player.x + dx + dx] === Tile.AIR
-    && map[player.y + 1][player.x + dx] !== Tile.AIR)
-  {
+  } else if (canPush(newTile, dx)) {
     map[player.y][player.x + dx + dx] = newTile;
     moveToTile(goingTo);
   }
@@ -83,6 +80,13 @@ function moveHorizontal(dx: number) {
 
 function canOccupy(newTile: Tile): boolean {
   return newTile === Tile.FLUX || newTile === Tile.AIR || newTile === Tile.KEY1 || newTile === Tile.KEY2;
+}
+
+function canPush(newTile: Tile, dx: number) {
+  const isPushable = newTile === Tile.STONE || newTile === Tile.BOX;
+  const emptyAfter = map[player.y][player.x + dx + dx] === Tile.AIR;
+  const emptyBelow = map[player.y + 1][player.x + dx] !== Tile.AIR; // FIXME seems like this can't happen.
+  return isPushable && emptyAfter && emptyBelow;
 }
 
 function moveVertical(dy: number) {
