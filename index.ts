@@ -1,3 +1,6 @@
+type Action = () => void;
+type CellPredicate = (c: Cell) => boolean;
+
 const TILE_SIZE = 30;
 const FPS = 30;
 const MILLIS_PER_FRAME = 1000 / FPS;
@@ -34,27 +37,9 @@ const tileColors = new Map<Tile, string>([
   [Tile.LOCK2, "#00ccff"],
 ]);
 
-type Thunk = () => void;
 
-const Input = {
-  UP: () => board.move(0, -1),
-  DOWN: () => board.move(0, 1),
-  LEFT: () => board.move(-1, 0),
-  RIGHT: () => board.move(1, 0),
-}
 
-const keyMap: Map<string, Input> = new Map<string, Input>([
-  ["ArrowUp", Input.UP],
-  ["w", Input.UP],
-  ["ArrowDown", Input.DOWN],
-  ["s", Input.DOWN],
-  ["ArrowLeft", Input.LEFT],
-  ["a", Input.LEFT],
-  ["ArrowRight", Input.RIGHT],
-  ["d", Input.RIGHT],
-]);
 
-let inputs: Thunk[] = [];
 
 class Cell {
   x: number;
@@ -96,7 +81,6 @@ class Cell {
   }
 }
 
-type CellPredicate = (c: Cell) => boolean;
 
 class Board {
   tiles: Tile[][];
@@ -104,8 +88,9 @@ class Board {
 
   constructor(tiles: Tile[][]) {
     this.tiles = tiles;
-    // This assumes there's only one player in the map.
-    this.player = this.cells(c => c.is(Tile.PLAYER)).next().value;
+    let players = this.cells(c => c.is(Tile.PLAYER));
+    this.player = players.next().value;
+    console.assert(players.next().done, "Only one player");
   }
 
   draw(g: CanvasRenderingContext2D) {
@@ -172,6 +157,26 @@ class Board {
 
 }
 
+
+
+function moveTile(from: Cell, to: Cell) {
+  to.setTile(from.tile())
+  from.clear();
+}
+
+function canFall(tile: Tile) {
+  return tile === Tile.STONE || tile === Tile.BOX;
+}
+
+function canPush(goingTo: Cell, dx: number): boolean {
+  const isPushable = goingTo.is(Tile.STONE) || goingTo.is(Tile.BOX);
+  const emptyAfter = goingTo.dx(dx).is(Tile.AIR);
+  const emptyBelow = goingTo.below().is(Tile.AIR); // FIXME seems like this can't happen unless the block is floating already.
+  return isPushable && emptyAfter && !emptyBelow;
+}
+
+
+
 let board: Board = new Board([
   [2, 2, 2, 2, 2, 2, 2, 2],
   [2, 3, 0, 1, 1, 2, 0, 2],
@@ -181,36 +186,39 @@ let board: Board = new Board([
   [2, 2, 2, 2, 2, 2, 2, 2],
 ]);
 
+let inputs: Action[] = [];
+
+const actions = {
+  UP: () => board.move(0, -1),
+  DOWN: () => board.move(0, 1),
+  LEFT: () => board.move(-1, 0),
+  RIGHT: () => board.move(1, 0),
+};
+
+const keyMap: Map<string, Action> = new Map<string, Action>([
+  ["ArrowUp", actions.UP],
+  ["w", actions.UP],
+  ["ArrowDown", actions.DOWN],
+  ["s", actions.DOWN],
+  ["ArrowLeft", actions.LEFT],
+  ["a", actions.LEFT],
+  ["ArrowRight", actions.RIGHT],
+  ["d", actions.RIGHT],
+]);
 
 
-function moveTile(from: Cell, to: Cell) {
-  to.setTile(from.tile())
-  from.clear();
-}
-
-
-
-function canPush(goingTo: Cell, dx: number): boolean {
-  const isPushable = goingTo.is(Tile.STONE) || goingTo.is(Tile.BOX);
-  const emptyAfter = goingTo.dx(dx).is(Tile.AIR);
-  const emptyBelow = goingTo.below().is(Tile.AIR); // FIXME seems like this can't happen unless the block is floating already.
-
-  return isPushable && emptyAfter && !emptyBelow;
+function gameLoop() {
+  let start = Date.now();
+  update();
+  draw();
+  setTimeout(gameLoop, Math.max(0, (start + MILLIS_PER_FRAME) - Date.now()));
 }
 
 function update() {
-  processInputs();
-  board.dropTilesOneCell();
-}
-
-function processInputs() {
   while (inputs.length > 0) {
     inputs.pop()();
   }
-}
-
-function canFall(tile: Tile) {
-  return tile === Tile.STONE || tile === Tile.BOX;
+  board.dropTilesOneCell();
 }
 
 function draw() {
@@ -218,13 +226,6 @@ function draw() {
   let g = canvas.getContext("2d");
   g.clearRect(0, 0, canvas.width, canvas.height);
   board.draw(g);
-}
-
-function gameLoop() {
-  let start = Date.now();
-  update();
-  draw();
-  setTimeout(gameLoop, Math.max(0, (start + MILLIS_PER_FRAME) - Date.now()));
 }
 
 function keyHandler(e: KeyboardEvent) {
