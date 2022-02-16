@@ -14,44 +14,44 @@ class Tile {
   color: string;
   kind: Kind;
   unlocks: Tile;
-  sprite: Sprite;
+  painter: Painter;
 
   constructor(color: string, kind: Kind) {
     this.color = color;
     this.kind = kind;
     this.unlocks = null;
-    this.sprite = new SquareSprite();
+    this.painter = squarePainter;
   }
- 
+
   draw(g: CanvasRenderingContext2D, x: number, y: number) {
-    this.sprite.draw(g, this.color, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    this.painter(g, this.color, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
   }
 
   makeKeyFor(unlocks: Tile) {
     this.unlocks = unlocks;
-    this.sprite = new CircleSprite();
+    this.painter = circlePainter;
   }
 }
 
-interface Sprite {
-  draw(g: CanvasRenderingContext2D, c: string, x: number, y: number, w: number, h: number): void;
+/*
+ * Functional interface for Tile painters.
+ */
+interface Painter {
+  (g: CanvasRenderingContext2D, c: string, x: number, y: number, w: number, h: number): void;
 }
 
-class SquareSprite implements Sprite {
-  draw(g: CanvasRenderingContext2D, color: string, x: number, y: number, w: number, h: number) {
-    g.fillStyle = color;
-    g.fillRect(x, y, w, h);
-  }
+function squarePainter(g: CanvasRenderingContext2D, color: string, x: number, y: number, w: number, h: number) {
+  g.fillStyle = color;
+  g.fillRect(x, y, w, h);
 }
 
-class CircleSprite implements Sprite {
-  draw(g: CanvasRenderingContext2D, color: string, x: number, y: number, w: number, h: number) {
-    g.beginPath();
-    g.fillStyle = color;
-    g.arc(x + w/2, y + h/2, w/2, 0, 2 * Math.PI, true);
-    g.fill();
-  }
+function circlePainter(g: CanvasRenderingContext2D, color: string, x: number, y: number, w: number, h: number) {
+  g.beginPath();
+  g.arc(x + w / 2, y + h / 2, w / 2, 0, 2 * Math.PI, true);
+  g.fillStyle = color;
+  g.fill();
 }
+
 
 /*
  * The cells of the board. Each has an x,y coordinate and a reference back to
@@ -122,14 +122,14 @@ class Cell {
     // about as it seems like it must always be true unless the block is
     // floating already.
     const after = this.dx(dx);
-    const below = this.below(); 
+    const below = this.below();
     return this.canFall() && after.isEmpty() && !below.isEmpty();
   }
 }
 
 /*
  * The board itself.
- */  
+ */
 class Board {
   tiles: Tile[][];
   player: Cell;
@@ -255,16 +255,16 @@ TILES.KEY1.makeKeyFor(TILES.LOCK1);
 TILES.KEY2.makeKeyFor(TILES.LOCK2);
 
 const TILE_NUMBERS = [
-  TILES.AIR, 
-  TILES.FLUX, 
-  TILES.UNBREAKABLE, 
-  TILES.PLAYER, 
-  TILES.STONE, 
-  TILES.BOX, 
-  TILES.KEY1, 
-  TILES.LOCK1, 
-  TILES.KEY2, 
-  TILES.LOCK2, 
+  TILES.AIR,
+  TILES.FLUX,
+  TILES.UNBREAKABLE,
+  TILES.PLAYER,
+  TILES.STONE,
+  TILES.BOX,
+  TILES.KEY1,
+  TILES.LOCK1,
+  TILES.KEY2,
+  TILES.LOCK2,
 ];
 
 const map = [
