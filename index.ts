@@ -93,7 +93,7 @@ class Cell {
   }
 
   isEmpty() {
-    return this.tile().kind == Kind.EMPTY;
+    return this.is(Kind.EMPTY);
   }
 
   setTile(tile: Tile) {
