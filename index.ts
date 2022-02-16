@@ -245,9 +245,9 @@ const TILES = {
   PLAYER: new Tile("#ff0000", Kind.PLAYER),
   STONE: new Tile("#0000cc", Kind.PUSHABLE),
   BOX: new Tile("#8b4513", Kind.PUSHABLE),
-  KEY1: new Tile("#ffccdd", Kind.CONSUMABLE),
+  KEY1: new Tile("#ffcc00", Kind.CONSUMABLE),
   LOCK1: new Tile("#ffcc00", Kind.IMMOVABLE),
-  KEY2: new Tile("#ddccff", Kind.CONSUMABLE),
+  KEY2: new Tile("#00ccff", Kind.CONSUMABLE),
   LOCK2: new Tile("#00ccff", Kind.IMMOVABLE),
 };
 
