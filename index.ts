@@ -88,8 +88,8 @@ class Cell {
     return this.board.tiles[this.y][this.x];
   }
 
-  is(tile: Tile) {
-    return this.tile() === tile;
+  is(kind: Kind) {
+    return this.tile().kind === kind;
   }
 
   isEmpty() {
@@ -135,9 +135,9 @@ class Board {
   player: Cell;
   emptyTile: Tile;
 
-  constructor(numbers: number[][], playerTile: Tile, emptyTile: Tile) {
+  constructor(numbers: number[][], emptyTile: Tile) {
     this.tiles = numbers.map(row => row.map(n => TILE_NUMBERS[n]));
-    let players = this.cells(c => c.is(playerTile));
+    let players = this.cells(c => c.is(Kind.PLAYER));
     this.player = players.next().value;
     console.assert(players.next().done, "Should only be one player");
     this.emptyTile = emptyTile;
@@ -185,7 +185,7 @@ class Board {
   }
 
   remove(tile: Tile) {
-    for (let c of this.cells(c => c.is(tile))) {
+    for (let c of this.cells(c => c.tile() === tile)) {
       c.clear();
     }
   }
@@ -276,7 +276,7 @@ const map = [
   [2, 2, 2, 2, 2, 2, 2, 2],
 ];
 
-const board: Board = new Board(map, TILES.PLAYER, TILES.AIR);
+const board: Board = new Board(map, TILES.AIR);
 
 const keybindings = new Keybindings();
 
