@@ -151,11 +151,17 @@ class Board {
 
   move(dx: number, dy: number) {
     const goingTo = this.player.dx(dx).dy(dy);
+    this.pushIfNeeded(dx, goingTo);
+    this.moveIfPossible(goingTo);
+  }
 
+  pushIfNeeded(dx: number, goingTo: Cell) {
     if (dx !== 0 && goingTo.canBePushed(dx)) {
       goingTo.moveTile(goingTo.dx(dx));
     }
+  }
 
+  moveIfPossible(goingTo: Cell) {
     if (goingTo.isEmpty() || goingTo.canBeConsumed()) {
       this.movePlayerTo(goingTo);
     }
