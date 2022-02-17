@@ -1,5 +1,6 @@
 type Action = () => void;
 type CellPredicate = (c: Cell) => boolean;
+type Painter = (g: CanvasRenderingContext2D, c: string, x: number, y: number, w: number, h: number) => void;
 
 const TILE_SIZE = 30;
 const FPS = 30;
@@ -31,13 +32,6 @@ class Tile {
     this.unlocks = unlocks;
     this.painter = circlePainter;
   }
-}
-
-/*
- * Functional interface for Tile painters.
- */
-interface Painter {
-  (g: CanvasRenderingContext2D, c: string, x: number, y: number, w: number, h: number): void;
 }
 
 function squarePainter(g: CanvasRenderingContext2D, color: string, x: number, y: number, w: number, h: number) {
