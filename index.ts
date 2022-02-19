@@ -17,6 +17,13 @@ class Tile {
   unlocks: Tile;
   painter: Painter;
 
+  static keyFor(lock: Tile) {
+    const key = new Tile(lock.color, Kind.CONSUMABLE);
+    key.unlocks = lock;
+    key.painter = circlePainter;
+    return key;
+  }
+
   constructor(color: string, kind: Kind) {
     this.color = color;
     this.kind = kind;
@@ -26,11 +33,6 @@ class Tile {
 
   draw(g: CanvasRenderingContext2D, x: number, y: number) {
     this.painter(g, this.color, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-  }
-
-  makeKeyFor(unlocks: Tile) {
-    this.unlocks = unlocks;
-    this.painter = circlePainter;
   }
 }
 
@@ -239,13 +241,8 @@ const canvas = document.getElementById("GameCanvas") as HTMLCanvasElement;
 const g = canvas.getContext("2d");
 
 const AIR = new Tile("#ffffff", Kind.EMPTY);
-const KEY1 = new Tile("#ffcc00", Kind.CONSUMABLE);
 const LOCK1 = new Tile("#ffcc00", Kind.IMMOVABLE);
-const KEY2 = new Tile("#00ccff", Kind.CONSUMABLE);
 const LOCK2 = new Tile("#00ccff", Kind.IMMOVABLE);
-
-KEY1.makeKeyFor(LOCK1);
-KEY2.makeKeyFor(LOCK2);
 
 const TILES = [
   AIR,
@@ -254,9 +251,9 @@ const TILES = [
   new Tile("#ff0000", Kind.PLAYER),
   new Tile("#0000cc", Kind.PUSHABLE),
   new Tile("#8b4513", Kind.PUSHABLE),
-  KEY1,
+  Tile.keyFor(LOCK1),
   LOCK1,
-  KEY2,
+  Tile.keyFor(LOCK2),
   LOCK2,
 ];
 
