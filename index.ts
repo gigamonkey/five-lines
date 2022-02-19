@@ -129,8 +129,8 @@ class Board {
   player: Cell;
   emptyTile: Tile;
 
-  constructor(numbers: number[][], emptyTile: Tile) {
-    this.tiles = numbers.map(row => row.map(n => TILE_NUMBERS[n]));
+  constructor(numbers: number[][], emptyTile: Tile, tileTypes: Tile[]) {
+    this.tiles = numbers.map(row => row.map(n => tileTypes[n]));
     let players = this.cells(c => c.is(Kind.PLAYER));
     this.player = players.next().value;
     console.assert(players.next().done, "Should only be one player");
@@ -238,33 +238,26 @@ class Keybindings {
 const canvas = document.getElementById("GameCanvas") as HTMLCanvasElement;
 const g = canvas.getContext("2d");
 
-const TILES = {
-  AIR: new Tile("#ffffff", Kind.EMPTY),
-  FLUX: new Tile("#ccffcc", Kind.CONSUMABLE),
-  UNBREAKABLE: new Tile("#999999", Kind.IMMOVABLE),
-  PLAYER: new Tile("#ff0000", Kind.PLAYER),
-  STONE: new Tile("#0000cc", Kind.PUSHABLE),
-  BOX: new Tile("#8b4513", Kind.PUSHABLE),
-  KEY1: new Tile("#ffcc00", Kind.CONSUMABLE),
-  LOCK1: new Tile("#ffcc00", Kind.IMMOVABLE),
-  KEY2: new Tile("#00ccff", Kind.CONSUMABLE),
-  LOCK2: new Tile("#00ccff", Kind.IMMOVABLE),
-};
+const AIR = new Tile("#ffffff", Kind.EMPTY);
+const KEY1 = new Tile("#ffcc00", Kind.CONSUMABLE);
+const LOCK1 = new Tile("#ffcc00", Kind.IMMOVABLE);
+const KEY2 = new Tile("#00ccff", Kind.CONSUMABLE);
+const LOCK2 = new Tile("#00ccff", Kind.IMMOVABLE);
 
-TILES.KEY1.makeKeyFor(TILES.LOCK1);
-TILES.KEY2.makeKeyFor(TILES.LOCK2);
+KEY1.makeKeyFor(LOCK1);
+KEY2.makeKeyFor(LOCK2);
 
-const TILE_NUMBERS = [
-  TILES.AIR,
-  TILES.FLUX,
-  TILES.UNBREAKABLE,
-  TILES.PLAYER,
-  TILES.STONE,
-  TILES.BOX,
-  TILES.KEY1,
-  TILES.LOCK1,
-  TILES.KEY2,
-  TILES.LOCK2,
+const TILES = [
+  AIR,
+  new Tile("#ccffcc", Kind.CONSUMABLE),
+  new Tile("#999999", Kind.IMMOVABLE),
+  new Tile("#ff0000", Kind.PLAYER),
+  new Tile("#0000cc", Kind.PUSHABLE),
+  new Tile("#8b4513", Kind.PUSHABLE),
+  KEY1,
+  LOCK1,
+  KEY2,
+  LOCK2,
 ];
 
 const map = [
@@ -276,7 +269,7 @@ const map = [
   [2, 2, 2, 2, 2, 2, 2, 2],
 ];
 
-const board: Board = new Board(map, TILES.AIR);
+const board: Board = new Board(map, AIR, TILES);
 
 const keybindings = new Keybindings();
 
