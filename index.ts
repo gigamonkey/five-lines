@@ -14,8 +14,8 @@ enum Kind { CONSUMABLE, PUSHABLE, IMMOVABLE, PLAYER, EMPTY };
 class Tile {
   color: string;
   kind: Kind;
-  unlocks: Tile;
-  painter: Painter;
+  unlocks: Tile = null;
+  painter: Painter = squarePainter;
 
   static keyFor(lock: Tile) {
     const key = new Tile(lock.color, Kind.CONSUMABLE);
@@ -27,8 +27,6 @@ class Tile {
   constructor(color: string, kind: Kind) {
     this.color = color;
     this.kind = kind;
-    this.unlocks = null;
-    this.painter = squarePainter;
   }
 
   draw(g: CanvasRenderingContext2D, x: number, y: number) {
@@ -207,13 +205,8 @@ class Board {
 }
 
 class Keybindings {
-  bindings: Map<string, Action>;
-  actions: Action[];
-
-  constructor() {
-    this.bindings = new Map<string, Action>();
-    this.actions = [];
-  }
+  bindings: Map<string, Action> = new Map<string, Action>();
+  actions: Action[] = [];
 
   bindKeys(keys: string[], action: Action) {
     keys.forEach(k => this.bindings.set(k, action));
