@@ -174,10 +174,11 @@ class Board {
   }
 
   dropTilesOneCell() {
-    for (let c of this.cells(c => c.canFall())) {
-      if (c.y < this.tiles.length - 1) {
+    for (let y = this.tiles.length - 2; y > -1; y--) {
+      for (let x = 0; x < this.tiles[y].length; x++) {
+        let c = new Cell(x, y, this);
         let below = c.below();
-        if (below.isEmpty()) {
+        if (c.canFall() && below.isEmpty()) {
           c.moveTile(below);
         }
       }
