@@ -279,7 +279,8 @@ function loop(step: () => void) {
   return () => {
     let start = Date.now();
     step();
-    setTimeout(loop(step), Math.max(0, (start + MILLIS_PER_FRAME) - Date.now()));
+    let spent = Date.now() - start;
+    setTimeout(loop(step), Math.max(0, MILLIS_PER_FRAME - spent));
   };
 }
 
