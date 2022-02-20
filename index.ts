@@ -272,7 +272,6 @@ keybindings.bindKeys(["ArrowRight", "d"], () => board.move(1, 0));
 function step() {
   keybindings.doActions();
   board.dropTilesOneCell();
-  g.clearRect(0, 0, canvas.width, canvas.height);
   board.draw(g);
 }
 
