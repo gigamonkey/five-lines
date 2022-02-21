@@ -104,11 +104,11 @@ class Cell {
   }
 
   canBeConsumed() {
-    return this.tile().kind == Kind.CONSUMABLE;
+    return this.is(Kind.CONSUMABLE);
   }
 
   canFall() {
-    return this.tile().kind == Kind.PUSHABLE;
+    return this.is(Kind.PUSHABLE) && this.below().isEmpty();
   }
 
   canBePushed(dx: number): boolean {
@@ -117,7 +117,7 @@ class Cell {
     // floating already.
     const after = this.dx(dx);
     const below = this.below();
-    return this.canFall() && after.isEmpty() && !below.isEmpty();
+    return this.is(Kind.PUSHABLE) && after.isEmpty() && !below.isEmpty();
   }
 }
 
@@ -193,11 +193,8 @@ class Board {
   dropCell(x: number, y: number) {
     let c = new Cell(x, y, this);
     if (c.canFall()) {
-      let below = c.below();
-      if (below.isEmpty()) {
-        c.moveTile(below);
-        this.settled = false;
-      }
+      c.moveTile(c.below());
+      this.settled = false;
     }
   }
 
