@@ -128,6 +128,7 @@ class Board {
   tiles: Tile[][];
   player: Cell;
   emptyTile: Tile;
+  settled: boolean = true;
 
   constructor(numbers: number[][], emptyTile: Tile, tileTypes: Tile[]) {
     this.tiles = numbers.map(row => row.map(n => tileTypes[n]));
@@ -174,12 +175,14 @@ class Board {
   }
 
   dropTilesOneCell() {
+    this.settled = true; // optimistic
     for (let y = this.tiles.length - 2; y > -1; y--) {
       for (let x = 0; x < this.tiles[y].length; x++) {
         let c = new Cell(x, y, this);
         let below = c.below();
         if (c.canFall() && below.isEmpty()) {
           c.moveTile(below);
+          this.settled = false;
         }
       }
     }
@@ -271,7 +274,9 @@ keybindings.bindKeys(["ArrowRight", "d"], () => board.move(1, 0));
 
 
 function step() {
-  keybindings.doActions();
+  if (board.settled) {
+    keybindings.doActions();
+  }
   board.dropTilesOneCell();
   board.draw(g);
 }
