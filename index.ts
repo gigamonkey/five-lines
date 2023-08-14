@@ -1,171 +1,304 @@
+type Action = () => void;
+type CellPredicate = (c: Cell) => boolean;
+type Painter = (g: CanvasRenderingContext2D, c: string, x: number, y: number, w: number, h: number) => void;
 
 const TILE_SIZE = 30;
 const FPS = 30;
-const SLEEP = 1000 / FPS;
+const MILLIS_PER_FRAME = 1000 / FPS;
 
-enum Tile {
+enum Kind { CONSUMABLE, PUSHABLE, IMMOVABLE, PLAYER, EMPTY };
+
+/*
+ * The distinct tiles that can exist. There should only be one instance of each type.
+ */
+class Tile {
+  color: string;
+  kind: Kind;
+  unlocks: Tile = null;
+  painter: Painter = squarePainter;
+
+  static keyFor(lock: Tile) {
+    const key = new Tile(lock.color, Kind.CONSUMABLE);
+    key.unlocks = lock;
+    key.painter = circlePainter;
+    return key;
+  }
+
+  constructor(color: string, kind: Kind) {
+    this.color = color;
+    this.kind = kind;
+  }
+
+  draw(g: CanvasRenderingContext2D, x: number, y: number) {
+    this.painter(g, this.color, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+  }
+}
+
+function squarePainter(g: CanvasRenderingContext2D, color: string, x: number, y: number, w: number, h: number) {
+  g.fillStyle = color;
+  g.fillRect(x, y, w, h);
+}
+
+function circlePainter(g: CanvasRenderingContext2D, color: string, x: number, y: number, w: number, h: number) {
+  g.beginPath();
+  g.arc(x + w / 2, y + h / 2, w / 2, 0, 2 * Math.PI, true);
+  g.fillStyle = color;
+  g.fill();
+}
+
+
+/*
+ * The cells of the board. Each has an x,y coordinate and a reference back to
+ * the board in order to get at the underlying tiles.
+ */
+class Cell {
+  x: number;
+  y: number;
+  board: Board;
+
+  constructor(x: number, y: number, board: Board) {
+    this.x = x;
+    this.y = y;
+    this.board = board;
+  }
+
+  draw(g: CanvasRenderingContext2D) {
+    this.tile().draw(g, this.x, this.y);
+  }
+
+  dx(d: number): Cell {
+    return new Cell(this.x + d, this.y, this.board);
+  }
+
+  dy(d: number): Cell {
+    return new Cell(this.x, this.y + d, this.board);
+  }
+
+  below() {
+    return this.dy(1);
+  }
+
+  tile() {
+    return this.board.tiles[this.y][this.x];
+  }
+
+  is(kind: Kind) {
+    return this.tile().kind === kind;
+  }
+
+  isEmpty() {
+    return this.is(Kind.EMPTY);
+  }
+
+  setTile(tile: Tile) {
+    this.board.tiles[this.y][this.x] = tile;
+  }
+
+  clear() {
+    this.setTile(board.emptyTile);
+  }
+
+  moveTile(to: Cell) {
+    to.setTile(this.tile())
+    this.clear();
+  }
+
+  canBeConsumed() {
+    return this.is(Kind.CONSUMABLE);
+  }
+
+  canFall() {
+    return this.is(Kind.PUSHABLE) && this.below().isEmpty();
+  }
+
+  canBePushed(dx: number): boolean {
+    // FIXME I'm not sure what the check for the cell below not being empty is
+    // about as it seems like it must always be true unless the block is
+    // floating already.
+    const after = this.dx(dx);
+    const below = this.below();
+    return this.is(Kind.PUSHABLE) && after.isEmpty() && !below.isEmpty();
+  }
+}
+
+/*
+ * The board itself.
+ */
+class Board {
+  tiles: Tile[][];
+  player: Cell;
+  emptyTile: Tile;
+  settled: boolean = true;
+
+  constructor(numbers: number[][], emptyTile: Tile, tileTypes: Tile[]) {
+    this.tiles = numbers.map(row => row.map(n => tileTypes[n]));
+    let players = this.cells(c => c.is(Kind.PLAYER));
+    this.player = players.next().value;
+    console.assert(players.next().done, "Should only be one player");
+    this.emptyTile = emptyTile;
+  }
+
+  draw(g: CanvasRenderingContext2D) {
+    for (let c of this.cells(() => true)) {
+      c.draw(g);
+    }
+  }
+
+  move(dx: number, dy: number) {
+    const goingTo = this.player.dx(dx).dy(dy);
+    this.pushIfNeeded(dx, goingTo);
+    this.moveIfPossible(goingTo);
+  }
+
+  pushIfNeeded(dx: number, goingTo: Cell) {
+    if (dx !== 0 && goingTo.canBePushed(dx)) {
+      goingTo.moveTile(goingTo.dx(dx));
+    }
+  }
+
+  moveIfPossible(goingTo: Cell) {
+    if (goingTo.isEmpty() || goingTo.canBeConsumed()) {
+      this.movePlayerTo(goingTo);
+    }
+  }
+
+  movePlayerTo(c: Cell) {
+    this.maybeUnlock(c.tile());
+    this.player.moveTile(c);
+    this.player = c;
+  }
+
+  maybeUnlock(current: Tile) {
+    if (current.unlocks !== null) {
+      this.remove(current.unlocks);
+    }
+  }
+
+  dropTilesOneCell() {
+    // Assume nothing drops. Will get set to false in dropCell if anything does.
+    this.settled = true;
+
+    // Work from the bottom up so tiles above other tiles that drop will also drop.
+    for (let y = this.tiles.length - 2; y >= 0; y--) {
+      this.dropRow(y);
+    }
+  }
+
+  dropRow(y: number) {
+    for (let x = 0; x < this.tiles[y].length; x++) {
+      this.dropCell(x, y);
+    }
+  }
+
+  dropCell(x: number, y: number) {
+    let c = new Cell(x, y, this);
+    if (c.canFall()) {
+      c.moveTile(c.below());
+      this.settled = false;
+    }
+  }
+
+  remove(tile: Tile) {
+    for (let c of this.cells(c => c.tile() === tile)) {
+      c.clear();
+    }
+  }
+
+  cell(x: number, y: number): Cell {
+    return new Cell(x, y, this);
+  }
+
+  *cells(p: CellPredicate): Generator<Cell> {
+    for (let y = 0; y < this.tiles.length; y++) {
+      for (let x = 0; x < this.tiles[y].length; x++) {
+        let cell = this.cell(x, y);
+        if (p(cell)) yield cell;
+      }
+    }
+  }
+}
+
+class Keybindings {
+  bindings: Map<string, Action> = new Map<string, Action>();
+  actions: Action[] = [];
+
+  bindKeys(keys: string[], action: Action) {
+    keys.forEach(k => this.bindings.set(k, action));
+  }
+
+  handle(e: KeyboardEvent) {
+    if (this.bindings.has(e.key)) {
+      this.actions.push(this.bindings.get(e.key));
+    }
+  }
+
+  doActions() {
+    while (this.actions.length > 0) {
+      this.actions.shift()();
+    }
+  }
+}
+
+
+//
+// Main
+// 
+
+const canvas = document.getElementById("GameCanvas") as HTMLCanvasElement;
+const g = canvas.getContext("2d");
+
+const AIR = new Tile("#ffffff", Kind.EMPTY);
+const LOCK1 = new Tile("#ffcc00", Kind.IMMOVABLE);
+const LOCK2 = new Tile("#00ccff", Kind.IMMOVABLE);
+
+const TILES = [
   AIR,
-  FLUX,
-  UNBREAKABLE,
-  PLAYER,
-  STONE, FALLING_STONE,
-  BOX, FALLING_BOX,
-  KEY1, LOCK1,
-  KEY2, LOCK2
-}
+  new Tile("#ccffcc", Kind.CONSUMABLE),
+  new Tile("#999999", Kind.IMMOVABLE),
+  new Tile("#ff0000", Kind.PLAYER),
+  new Tile("#0000cc", Kind.PUSHABLE),
+  new Tile("#8b4513", Kind.PUSHABLE),
+  Tile.keyFor(LOCK1),
+  LOCK1,
+  Tile.keyFor(LOCK2),
+  LOCK2,
+];
 
-enum Input {
-  UP, DOWN, LEFT, RIGHT
-}
-
-let playerx = 1;
-let playery = 1;
-let map: Tile[][] = [
+const map = [
   [2, 2, 2, 2, 2, 2, 2, 2],
   [2, 3, 0, 1, 1, 2, 0, 2],
-  [2, 4, 2, 6, 1, 2, 0, 2],
-  [2, 8, 4, 1, 1, 2, 0, 2],
-  [2, 4, 1, 1, 1, 9, 0, 2],
+  [2, 4, 2, 5, 1, 2, 0, 2],
+  [2, 6, 4, 1, 1, 2, 0, 2],
+  [2, 4, 1, 1, 1, 7, 0, 2],
   [2, 2, 2, 2, 2, 2, 2, 2],
 ];
 
-let inputs: Input[] = [];
+const board: Board = new Board(map, AIR, TILES);
 
-function remove(tile: Tile) {
-  for (let y = 0; y < map.length; y++) {
-    for (let x = 0; x < map[y].length; x++) {
-      if (map[y][x] === tile) {
-        map[y][x] = Tile.AIR;
-      }
-    }
+const keybindings = new Keybindings();
+
+keybindings.bindKeys(["ArrowUp", "w"], () => board.move(0, -1));
+keybindings.bindKeys(["ArrowDown", "s"], () => board.move(0, 1));
+keybindings.bindKeys(["ArrowLeft", "a"], () => board.move(-1, 0));
+keybindings.bindKeys(["ArrowRight", "d"], () => board.move(1, 0));
+
+
+function step() {
+  if (board.settled) {
+    keybindings.doActions();
   }
+  board.dropTilesOneCell();
+  board.draw(g);
 }
 
-function moveToTile(newx: number, newy: number) {
-  map[playery][playerx] = Tile.AIR;
-  map[newy][newx] = Tile.PLAYER;
-  playerx = newx;
-  playery = newy;
+function loop(step: () => void) {
+  return () => {
+    let start = Date.now();
+    step();
+    let spent = Date.now() - start;
+    setTimeout(loop(step), Math.max(0, MILLIS_PER_FRAME - spent));
+  };
 }
 
-function moveHorizontal(dx: number) {
-  if (map[playery][playerx + dx] === Tile.FLUX
-    || map[playery][playerx + dx] === Tile.AIR) {
-    moveToTile(playerx + dx, playery);
-  } else if ((map[playery][playerx + dx] === Tile.STONE
-    || map[playery][playerx + dx] === Tile.BOX)
-    && map[playery][playerx + dx + dx] === Tile.AIR
-    && map[playery + 1][playerx + dx] !== Tile.AIR) {
-    map[playery][playerx + dx + dx] = map[playery][playerx + dx];
-    moveToTile(playerx + dx, playery);
-  } else if (map[playery][playerx + dx] === Tile.KEY1) {
-    remove(Tile.LOCK1);
-    moveToTile(playerx + dx, playery);
-  } else if (map[playery][playerx + dx] === Tile.KEY2) {
-    remove(Tile.LOCK2);
-    moveToTile(playerx + dx, playery);
-  }
-}
-
-function moveVertical(dy: number) {
-  if (map[playery + dy][playerx] === Tile.FLUX
-    || map[playery + dy][playerx] === Tile.AIR) {
-    moveToTile(playerx, playery + dy);
-  } else if (map[playery + dy][playerx] === Tile.KEY1) {
-    remove(Tile.LOCK1);
-    moveToTile(playerx, playery + dy);
-  } else if (map[playery + dy][playerx] === Tile.KEY2) {
-    remove(Tile.LOCK2);
-    moveToTile(playerx, playery + dy);
-  }
-}
-
-function update() {
-  while (inputs.length > 0) {
-    let current = inputs.pop();
-    if (current === Input.LEFT)
-      moveHorizontal(-1);
-    else if (current === Input.RIGHT)
-      moveHorizontal(1);
-    else if (current === Input.UP)
-      moveVertical(-1);
-    else if (current === Input.DOWN)
-      moveVertical(1);
-  }
-
-  for (let y = map.length - 1; y >= 0; y--) {
-    for (let x = 0; x < map[y].length; x++) {
-      if ((map[y][x] === Tile.STONE || map[y][x] === Tile.FALLING_STONE)
-        && map[y + 1][x] === Tile.AIR) {
-        map[y + 1][x] = Tile.FALLING_STONE;
-        map[y][x] = Tile.AIR;
-      } else if ((map[y][x] === Tile.BOX || map[y][x] === Tile.FALLING_BOX)
-        && map[y + 1][x] === Tile.AIR) {
-        map[y + 1][x] = Tile.FALLING_BOX;
-        map[y][x] = Tile.AIR;
-      } else if (map[y][x] === Tile.FALLING_STONE) {
-        map[y][x] = Tile.STONE;
-      } else if (map[y][x] === Tile.FALLING_BOX) {
-        map[y][x] = Tile.BOX;
-      }
-    }
-  }
-}
-
-function draw() {
-  let canvas = document.getElementById("GameCanvas") as HTMLCanvasElement;
-  let g = canvas.getContext("2d");
-
-  g.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Draw map
-  for (let y = 0; y < map.length; y++) {
-    for (let x = 0; x < map[y].length; x++) {
-      if (map[y][x] === Tile.FLUX)
-        g.fillStyle = "#ccffcc";
-      else if (map[y][x] === Tile.UNBREAKABLE)
-        g.fillStyle = "#999999";
-      else if (map[y][x] === Tile.STONE || map[y][x] === Tile.FALLING_STONE)
-        g.fillStyle = "#0000cc";
-      else if (map[y][x] === Tile.BOX || map[y][x] === Tile.FALLING_BOX)
-        g.fillStyle = "#8b4513";
-      else if (map[y][x] === Tile.KEY1 || map[y][x] === Tile.LOCK1)
-        g.fillStyle = "#ffcc00";
-      else if (map[y][x] === Tile.KEY2 || map[y][x] === Tile.LOCK2)
-        g.fillStyle = "#00ccff";
-
-      if (map[y][x] !== Tile.AIR && map[y][x] !== Tile.PLAYER)
-        g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-    }
-  }
-
-  // Draw player
-  g.fillStyle = "#ff0000";
-  g.fillRect(playerx * TILE_SIZE, playery * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-}
-
-function gameLoop() {
-  let before = Date.now();
-  update();
-  draw();
-  let after = Date.now();
-  let frameTime = after - before;
-  let sleep = SLEEP - frameTime;
-  setTimeout(() => gameLoop(), sleep);
-}
-
-window.onload = () => {
-  gameLoop();
-}
-
-const LEFT_KEY = "ArrowLeft";
-const UP_KEY = "ArrowUp";
-const RIGHT_KEY = "ArrowRight";
-const DOWN_KEY = "ArrowDown";
-window.addEventListener("keydown", e => {
-  if (e.key === LEFT_KEY || e.key === "a") inputs.push(Input.LEFT);
-  else if (e.key === UP_KEY || e.key === "w") inputs.push(Input.UP);
-  else if (e.key === RIGHT_KEY || e.key === "d") inputs.push(Input.RIGHT);
-  else if (e.key === DOWN_KEY || e.key === "s") inputs.push(Input.DOWN);
-});
-
+window.onload = loop(step);
+window.onkeydown = e => keybindings.handle(e);
